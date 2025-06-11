@@ -145,41 +145,41 @@ Official Guides:
 - **[OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering)** - Official best practices from OpenAI
 - [Best Practices for Prompt Engineering - OpenAI API](https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api) - Comprehensive API-focused guide
 
-**Advanced Techniques:**
+Advanced Techniques:
 - [10 Best Practices for Prompt Engineering - PromptHub](https://www.prompthub.us/blog/10-best-practices-for-prompt-engineering-with-any-model) - Universal prompt engineering principles
 - [Prompt Engineering Techniques - K2view](https://www.k2view.com/blog/prompt-engineering-techniques/) - Top 5 techniques for 2025
 - [12 Prompt Engineering Best Practices - TechTarget](https://www.techtarget.com/searchenterpriseai/tip/Prompt-engineering-tips-and-best-practices) - Professional development tips
 
-**Hands-on Learning:**
+Hands-on Learning:
 - [Prompt Engineering Tutorial - Spiceworks](https://www.spiceworks.com/tech/artificial-intelligence/articles/what-is-prompt-engineering/) - Practical applications and examples
 
 **7. Retrieval-Augmented Generation (RAG)**
 
-**Foundational Understanding:**
+Foundational Understanding:
 - [What is RAG? - DataCamp](https://www.datacamp.com/blog/what-is-retrieval-augmented-generation-rag) - Complete introduction to RAG concepts
 - [RAG Architecture Deep Dive - LinkedIn](https://www.linkedin.com/pulse/rag-architecture-deep-dive-frank-denneman-4lple) - Comprehensive system architecture explanation
 
-**Implementation Tutorials:**
+Implementation Tutorials:
 - [Building RAG from Scratch - Learn by Building](https://learnbybuilding.ai/tutorial/rag-from-scratch/) - Beginner's step-by-step tutorial
 - [RAG Implementation Strategy - Galileo AI](https://galileo.ai/blog/rag-implementation-strategy-step-step-process-ai-excellence) - Professional implementation guide
 - [RAG in Azure AI Search - Microsoft](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview) - Enterprise-grade RAG solutions
 
-**Advanced RAG Concepts:**
+Advanced RAG Concepts:
 - [RAG Tutorial & Best Practices - Nexla](https://nexla.com/ai-infrastructure/retrieval-augmented-generation/) - Comprehensive coverage with practical examples
 - [What is RAG? - IBM](https://www.ibm.com/think/topics/retrieval-augmented-generation) - Enterprise perspective on RAG implementation
 
 **8. Local LLMs**
 
-**Getting Started:**
+Getting Started:
 - [Run LLMs Locally: 7 Simple Methods - DataCamp](https://www.datacamp.com/tutorial/run-llms-locally-tutorial) - Comprehensive guide covering multiple tools
 - [How to Run Local LLMs - Adventures in CRE](https://www.adventuresincre.com/how-to-install-llm-locally/) - Step-by-step installation guide
 
-**Specific Tools and Platforms:**
+Specific Tools and Platforms:
 - [Ollama Tutorial - KDnuggets](https://www.kdnuggets.com/ollama-tutorial-running-llms-locally-made-super-simple) - Simple local LLM deployment
 - [6 Ways to Run LLMs Locally - Semaphore](https://semaphoreci.com/blog/local-llm) - Multiple implementation approaches
 - [How to Run Local LLMs - n8n](https://blog.n8n.io/local-llm/) - Complete setup guide with automation
 
-**Advanced Local Deployment:**
+Advanced Local Deployment:
 - [How to Run Your Own Local LLM - HackerNoon](https://hackernoon.com/how-to-run-your-own-local-llm-updated-for-2024) - Updated 2024 guide with multiple options
 - [Run Models Locally - LangChain](https://python.langchain.com/docs/how_to/local_llms/) - Integration with LangChain framework
 
@@ -192,10 +192,6 @@ Official Guides:
 - [CS224N Natural Language Processing - Stanford Online](https://online.stanford.edu/courses/cs224n-natural-language-processing-deep-learning) - Official Stanford course
 - [AI Demystified: Introduction to LLMs - Stanford IT](https://uit.stanford.edu/service/techtraining/ai-demystified/llm) - Non-technical introduction
 
-**Community Resources**
-- [r/LocalLLaMA](https://www.reddit.com/r/LocalLLaMA/) - Reddit community for local LLM enthusiasts
-- [r/PromptEngineering](https://www.reddit.com/r/PromptEngineering/) - Prompt engineering discussions and techniques
-- [Hugging Face Transformers Documentation](https://huggingface.co/docs/transformers/) - Comprehensive library documentation
 
  
 

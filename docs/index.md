@@ -1,17 +1,10 @@
 ---
 layout: home
-title: Welcome to My Blog
+title: GenAI training
 ---
 
-This is a clean, simple blog template based on GOV.UK design patterns but simplified for personal use. The layout is responsive and focuses on readability.
+Companion website for Generative AI training classes
 
-## Features
-
-- Clean, accessible design
-- Responsive layout
-- Post categorization
-- Syntax highlighting for code
-- Simple navigation
-- GitHub Pages compatible
+![Front page image]({{ site.baseurl }}/assets/images/cave.jpg)
 
 Browse through the recent posts below or visit the [blog archive](/blog/) to see all posts.
