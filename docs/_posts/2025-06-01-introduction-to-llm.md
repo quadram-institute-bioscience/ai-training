@@ -1,0 +1,67 @@
+---
+layout: post
+title: "Introduction to Large Language Models (NBI)"
+date: 2023-01-15 14:30:00 +0000
+categories: course
+author: Andrea Telatin
+toc:
+  - id: intro
+    title: Introduction to Large Language Models
+  - id: tools
+    title: Some popular tools
+  - id: reading-list
+    title: Reading List
+---
+
+## Introduction to Large Language Models {#intro}
+
+**Topics**
+
+What are the foundations of Large Language Models (LLMs) and how do they generate text for us; 
+Accuracy and limitations of LLMs; 
+Ethical and integrity considerations; 
+Privacy concerns and local use of LLMs; 
+AI-powered literature mining tools; 
+Overview of coding assistants and coding agents.
+
+
+| **#**               | **Course details**                              |
+| ------------------- | ----------------------------------------------- |
+| **Target Audience** | Everyone at NBI (students, researchers, staff)  |
+| **Duration**        | 2.0 hours                                       |
+| **Format**          | Classroom                                       |
+| **Attendees**       | 6 - 18 participants                             |
+| **Structure**       | Frontal lectures alternated to group activities |
+
+After the course, learners will be able to:
+
+| #   | **Learning Outcome**                                                                                            |
+| --- | --------------------------------------------------------------------------------------------------------------- |
+| 1   | Critically evaluate LLM outputs by identifying potential hallucinations, biases, and knowledge limitations      |
+| 2   | Make informed decisions about data privacy, academic integrity, and appropriate use of AI in scholarly work     |
+| 3   | Select appropriate deployment models (local vs. cloud) based on data sensitivity and privacy requirements       |
+| 4   | Effectively prompt and utilize generative AI tools (Claude, ChatGPT, Perplexity) for research-appropriate tasks |
+| 5   | Utilise literature mining AI-powered tools (such as Elicit) and understand their limitations                    |
+| 6   | Leverage coding assistants to generate, debug, and optimize code for research tasks                             |
+
+## Before
+
+* [Online form](https://forms.cloud.microsoft/e/h8ifhdFuxH)
+
+## Some popular tools {#tools}
+
+* Chat bots
+  * [ChatGPT](https://chatgpt.com/)
+  * [Claude](https://claude.ai/)
+  * [Perplexity](https://www.perplexity.ai/)
+  * [Microsoft Copilot](https://copilot.microsoft.com/)
+  * [You.com](https://you.com/)
+* Code assistants
+  * [GitHub Copilot](https://github.com/features/copilot)
+  * [Tabnine](https://www.tabnine.com/)
+  * [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview)
+  * [Cursor](https://www.cursor.com/) 
+
+## Reading List {#reading-list}
+
+To be completed

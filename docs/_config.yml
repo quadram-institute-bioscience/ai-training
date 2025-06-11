@@ -1,0 +1,24 @@
+title: GenAI training
+description: >- 
+  Some resources used for the training sessions on Generative AI run by the Core Bioinformatics team at the Quadram Institute Bioscience (Norwich, UK)
+url: "https://quadram-institute-bioscience.github.io/" # the base hostname & protocol for your site
+baseurl: "/ai-training" # the subpath of your site, e.g. /blog
+twitter_username: telatin
+github_username: quadram-institute-bioscience
+
+# Build settings
+markdown: kramdown
+permalink: /:year/:month/:day/:title/
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+
+# Collections
+collections:
+  posts:
+    output: true
+    permalink: /:collection/:year/:month/:day/:title/

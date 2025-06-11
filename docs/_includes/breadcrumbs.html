@@ -1,0 +1,20 @@
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol class="breadcrumbs-list">
+    <li class="breadcrumbs-item">
+      <a href="{{ '/' | relative_url }}">Home</a>
+    </li>
+    
+    {% if page.url contains '/blog/' %}
+      {% if page.layout == 'post' %}
+        <li class="breadcrumbs-item">
+          <a href="{{ '/blog/' | relative_url }}">Blog</a>
+        </li>
+        <li class="breadcrumbs-item" aria-current="page">{{ page.title }}</li>
+      {% else %}
+        <li class="breadcrumbs-item" aria-current="page">Blog</li>
+      {% endif %}
+    {% else %}
+      <li class="breadcrumbs-item" aria-current="page">{{ page.title }}</li>
+    {% endif %}
+  </ol>
+</nav>

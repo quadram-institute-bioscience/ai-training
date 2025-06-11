@@ -1,0 +1,25 @@
+---
+layout: default
+---
+
+<div class="grid-row">
+  <div class="grid-column-two-thirds">
+    <h1 class="heading-xl">{{ page.title }}</h1>
+    
+    {{ content }}
+  </div>
+  
+  {% if page.show_sidebar != false %}
+  <div class="grid-column-one-third">
+    <aside class="sidebar">
+      <h2 class="heading-m">Quick Links</h2>
+      <ul class="list">
+        <li><a href="{{ '/' | relative_url }}">Home</a></li>
+        <li><a href="{{ '/blog/' | relative_url }}">Blog</a></li>
+        <li><a href="{{ '/about/' | relative_url }}">About</a></li>
+        <li><a href="{{ '/contact/' | relative_url }}">Contact</a></li>
+      </ul>
+    </aside>
+  </div>
+  {% endif %}
+</div>

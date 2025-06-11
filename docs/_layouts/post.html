@@ -1,0 +1,86 @@
+---
+layout: default
+---
+
+<div class="grid-row">
+  <div class="grid-column-two-thirds">
+    <h1 class="heading-xl">{{ page.title }}</h1>
+    
+    {% if page.date %}
+    <p class="post-meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">
+        {{ page.date | date: "%B %-d, %Y" }}
+      </time>
+      {% if page.author %}
+        • {{ page.author }}
+      {% endif %}
+    </p>
+    {% endif %}
+    
+    <aside class="sidebar table-of-contents" role="complementary">
+      <nav aria-label="Table of contents">
+        <h2 class="heading-m">Contents</h2>
+        <ol class="toc-list">
+          {% for heading in page.toc %}
+            <li class="toc-list-item">
+              <a href="#{{ heading.id }}">{{ heading.title }}</a>
+            </li>
+          {% endfor %}
+        </ol>
+      </nav>
+    </aside>
+  </div>
+</div>
+
+<div class="grid-row">
+  <div class="grid-column-two-thirds post-content">
+    {{ content }}
+    
+    <nav class="pagination" role="navigation" aria-label="Pagination">
+      <div class="pagination-previous">
+        {% if page.previous.url %}
+        <a class="pagination-link" href="{{ page.previous.url | relative_url }}" rel="prev">
+          <span class="pagination-link-title">Previous</span>
+          <span class="pagination-link-label">{{ page.previous.title }}</span>
+        </a>
+        {% endif %}
+      </div>
+      
+      <div class="pagination-next">
+        {% if page.next.url %}
+        <a class="pagination-link" href="{{ page.next.url | relative_url }}" rel="next">
+          <span class="pagination-link-title">Next</span>
+          <span class="pagination-link-label">{{ page.next.title }}</span>
+        </a>
+        {% endif %}
+      </div>
+    </nav>
+  </div>
+  
+  <div class="grid-column-one-third">
+    <aside class="related-items" role="complementary">
+      <h2 class="heading-m" id="related-posts">Related Posts</h2>
+      <nav role="navigation" aria-labelledby="related-posts">
+        <ul class="list">
+          {% assign max_related = 3 %}
+          {% assign min_common_tags = 1 %}
+          {% assign related_posts = site.posts | where_exp:"post", "post.url != page.url" | sample: 5 %}
+          
+          {% for post in related_posts limit: max_related %}
+            <li>
+              <a href="{{ post.url | relative_url }}">
+                {{ post.title }}
+              </a>
+            </li>
+          {% endfor %}
+          
+          <li>
+            <a href="{{ '/blog/' | relative_url }}" class="font-weight-bold">
+              More posts
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+  </div>
+</div>

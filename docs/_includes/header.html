@@ -1,0 +1,28 @@
+<header class="site-header">
+  <div class="container">
+    <div class="header-wrapper">
+      <div class="site-logo">
+        <a href="{{ '/' | relative_url }}" class="logo-link">
+          {{ site.title }}
+        </a>
+      </div>
+      
+      <nav class="site-nav">
+        <ul class="nav-list">
+          <li class="nav-item {% if page.url == '/' %}active{% endif %}">
+            <a href="{{ '/' | relative_url }}">Home</a>
+          </li>
+          <li class="nav-item {% if page.url contains '/blog/' %}active{% endif %}">
+            <a href="{{ '/blog/' | relative_url }}">Blog</a>
+          </li>
+          <li class="nav-item {% if page.url contains '/about/' %}active{% endif %}">
+            <a href="{{ '/about/' | relative_url }}">About</a>
+          </li>
+          <li class="nav-item {% if page.url contains '/contact/' %}active{% endif %}">
+            <a href="{{ '/contact/' | relative_url }}">Contact</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
