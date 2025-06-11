@@ -4,16 +4,10 @@ title: Contact
 permalink: /contact/
 ---
 
-Feel free to reach out if you have any questions or comments.
+This repository is made by the [**Core Bioinformatics team**](https://quadram.ac.uk/support_groups/core-bioinformatics/)
+at the [Quadram Institute Bioscience](https://quadram.ac.uk/).
 
-## Ways to connect
-
-- **Email**: [your-email@example.com](mailto:your-email@example.com)
-- **GitHub**: [github.com/username](https://github.com/username)
-- **Twitter**: [@username](https://twitter.com/username)
-
-Or use the form below:
-
+<!-- 
 <div class="contact-form">
   <form action="#" method="POST">
     <div class="form-group">
@@ -36,7 +30,7 @@ Or use the form below:
     </div>
   </form>
 </div>
-
+-->
 <style>
   .contact-form {
     margin-top: 2rem;
@@ -84,5 +78,4 @@ Or use the form below:
     box-shadow: 0 0 0 3px #ffdd00;
   }
 </style>
-
-**Note**: The contact form above is for demonstration purposes. To make it functional, you'll need to add backend processing.
+ 
