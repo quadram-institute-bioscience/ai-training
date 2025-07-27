@@ -1,11 +1,6 @@
 # 🤖 AI Training for Researchers
  
-
-## ✨ What's Inside?
-
-This repository contains materials and links used for training on AI tools for scientific researchers.
-
-
+> This repository was made with Claude Code 
 
 ## 🌍 Who's it for?
 
@@ -13,7 +8,6 @@ This repository contains materials and links used for training on AI tools for s
 - 📊 Data-minded researchers ready to go deeper  
 - 🧑‍🏫 Trainers and educators building workshops  
 - 🧪 Anyone looking to make sense of AI beyond the buzzwords
-
 
 
 ## 🚧 Always in Progress
@@ -26,4 +20,5 @@ Contributions, suggestions, and questions are always welcome.
 
 Thanks for stopping by!  
 Dive in, remix, share — and let’s build understanding together.
+
 
