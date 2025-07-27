@@ -17,7 +17,7 @@ toc:
     title: Few-shots prompting
   - id: structured
     title: Structured Prompting
- ---
+---
  
 ## Base Topic: Planning a One-Day Trip in Norfolk, UK
 

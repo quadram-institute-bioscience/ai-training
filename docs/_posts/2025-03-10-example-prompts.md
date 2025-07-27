@@ -13,7 +13,7 @@ toc:
     title: ChatGPT answer
   - id: perplexity
     title: Perplexity (link)
- ---
+---
 
 ## The prompt {#prompt}
 
