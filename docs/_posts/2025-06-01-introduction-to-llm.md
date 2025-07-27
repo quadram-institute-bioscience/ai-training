@@ -50,6 +50,13 @@ After the course, learners will be able to:
 
 ## Hands-on tasks {#tasks}
 
+* [Prompt engineering]()
+  * [Different techniques]({{ site.baseurl }}/{% post_url 2025-03-10-techniques %})
+    * [Structured prompt: a trip to Norfolk]({{ site.baseurl }}/{% post_url 2025-03-10-example-prompts %})
+      * [Perplexity answer]({{ site.baseurl }}/{% post_url 2025-03-11-perplexity-trip %})
+* [Literature]()
+* [Running locally]()
+
 ## Reading List {#reading-list}
 
 * See [reading list]()

@@ -1,12 +1,23 @@
 ---
 layout: post
-title: "Example prompts"
+title: "Structured Prompting with Specific Output Format"
 date: 2025-03-01 14:30:00 +0000
 categories: links
 author: Andrea Telatin
----
+toc:
+  - id: prompt
+    title: The Prompt
+  - id: claude
+    title: Claude answer
+  - id: gpt
+    title: ChatGPT answer
+  - id: perplexity
+    title: Perplexity (link)
+ ---
 
-##
+## The prompt {#prompt}
+
+**Expected Result**: Highly organised, comprehensive information in the requested format, easy to follow and use.
 
 The prompt:
 
@@ -31,7 +42,7 @@ BUDGET ESTIMATE:
 BACKUP PLAN:
 - Alternative indoor activities if weather is poor
 
-## Claude answer
+## Claude answer {#claude}
 
 **One-Day Norfolk Coast Adventure**
 
@@ -97,7 +108,7 @@ BACKUP PLAN:
 
 ---
 
-## ChatGPT answer
+## ChatGPT answer {#gpt}
 
 Certainly! Here's a curated **one-day trip plan in Norfolk**, following your requested format:
 
@@ -194,6 +205,6 @@ If the weather is poor:
 
 Let me know if you want a variation (e.g., with public transport only or family-focused)!
 
-## Perplexity (#perplexity)
+## Perplexity {#perplexity}
 
 Link [Perplexity output]({{site.baseur}}/{%  post_url 2025-03-11-perplexity-trip %})
