@@ -4,78 +4,10 @@ title: Contact
 permalink: /contact/
 ---
 
-This repository is made by the [**Core Bioinformatics team**](https://quadram.ac.uk/support_groups/core-bioinformatics/)
-at the [Quadram Institute Bioscience](https://quadram.ac.uk/).
+Feel free to reach out if you have any questions or comments.
 
-<!-- 
-<div class="contact-form">
-  <form action="#" method="POST">
-    <div class="form-group">
-      <label for="name">Name</label>
-      <input type="text" id="name" name="name" required>
-    </div>
-    
-    <div class="form-group">
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" required>
-    </div>
-    
-    <div class="form-group">
-      <label for="message">Message</label>
-      <textarea id="message" name="message" rows="5" required></textarea>
-    </div>
-    
-    <div class="form-group">
-      <button type="submit">Send Message</button>
-    </div>
-  </form>
-</div>
--->
-<style>
-  .contact-form {
-    margin-top: 2rem;
-  }
-  
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-  
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-  }
-  
-  input, textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid #b1b4b6;
-    font-size: 1rem;
-    font-family: inherit;
-  }
-  
-  input:focus, textarea:focus {
-    outline: 3px solid #ffdd00;
-    box-shadow: 0 0 0 3px #ffdd00;
-  }
-  
-  button {
-    background-color: #1d70b8;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #003078;
-  }
-  
-  button:focus {
-    outline: 3px solid #ffdd00;
-    box-shadow: 0 0 0 3px #ffdd00;
-  }
-</style>
- 
+## Ways to connect
+
+- **Website** [Quadram Core Bioinformatics](https://quadram.ac.uk/support_groups/core-bioinformatics/?utm_source=rss&utm_medium=rss&utm_campaign=core-bioinformatics)
+- **GitHub**: [github.com/quadram-institute-bioscience](https://github.com/quadram-institute-bioscience)
+
