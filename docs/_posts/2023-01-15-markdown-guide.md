@@ -2,7 +2,7 @@
 layout: post
 title: "Markdown Guide"
 date: 2023-01-15 14:30:00 +0000
-categories: guides
+categories: blog
 author: Andrea Telatin
 toc:
   - id: basic-syntax
