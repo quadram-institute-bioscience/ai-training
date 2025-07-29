@@ -1,24 +1,45 @@
-title: GenAI training
-description: >- 
-  Some resources used for the training sessions on Generative AI run by the Core Bioinformatics team at the Quadram Institute Bioscience (Norwich, UK)
-url: "https://quadram-institute-bioscience.github.io/" # the base hostname & protocol for your site
-baseurl: "/ai-training" # the subpath of your site, e.g. /blog
-twitter_username: telatin
-github_username: quadram-institute-bioscience
-
-# Build settings
+# basic configuration
 markdown: kramdown
-permalink: /:year/:month/:day/:title/
+permalink: /:categories/:title/
 
-# Exclude from processing
-exclude:
-  - Gemfile
-  - Gemfile.lock
-  - node_modules
-  - vendor
+# Change this tracking code with your own tracking code
+ga_tracking_code: UA-185637-20
+# Please leave this code here for us to see how Course in a Box get used
+p2pu_ga_tracking_code: UA-55722824-1
 
-# Collections
-collections:
-  posts:
-    output: true
-    permalink: /:collection/:year/:month/:day/:title/
+# Some files we need to exclude, so Github can build the site
+exclude: [Gemfile, Gemfile.lock, README.md]
+
+defaults:
+  -
+    scope:
+      path: "modules" # an empty string here means all files in the project
+    values:
+      layout: "course_page"
+
+prose:
+  media: img
+  ignore:
+    - /_includes
+    - /_layouts
+    - /_sass
+    - /fonts
+    - /js
+    - /css
+
+plugins:
+
+  - jemoji
+  
+google:
+  gtag4: "G-Q12CPTSQDT"
+  
+google_analytics: 'UA-185637-20'
+google_tag4: 'G-Q12CPTSQDT'
+
+# Set some personal styles and logo for your course
+# this is a hex value http://www.w3schools.com/tags/ref_colorpicker.asp
+jumbotron_color: "#B6BE00ff"
+jumbotron_image: "img/jumbotron-image.svg"
+# jumbotron_mask: "img/jumbotron-mask.svg"
+jumbotron_icon: "img/box-icon.png"

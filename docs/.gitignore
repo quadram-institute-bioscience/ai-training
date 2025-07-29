@@ -1,31 +1,5 @@
-# Jekyll generated files
-_site
+_site/*
+.idea/
 .sass-cache
-.jekyll-cache
-.jekyll-metadata
-vendor
-
-# macOS system files
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-
-# Windows system files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-
-# Editor directories and files
-.idea
-.vscode
-*.swp
-*.swo
+DS_Store
+.bundler/
