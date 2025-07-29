@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workshop Scheduler</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+    .band {
+      height: 33.33vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+    }
+    #top {
+      font-size: 3em;
+      font-weight: bold;
+    }
+    .progress-container {
+      position: relative;
+      width: 80%;
+      height: 30px;
+      background: #ddd;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      height: 100%;
+      transition: width 1s linear;
+    }
+    .label {
+      margin-top: 10px;
+      font-size: 1.2em;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="top" class="band">Loading...</div>
+
+  <div id="middle" class="band">
+    <div class="progress-container">
+      <div class="progress-bar" id="session-bar"></div>
+    </div>
+    <div class="label" id="session-label"></div>
+  </div>
+
+  <div id="bottom" class="band">
+    <div class="progress-container">
+      <div class="progress-bar" id="total-bar" style="background: #333;"></div>
+    </div>
+    <div class="label" id="total-label"></div>
+  </div>
+
+  <script>
+    const sessions = [
+      { start: "13:30", duration: 10, color: "#FFAABB", title: "Warmup session" },
+      { start: "13:40", duration: 30, color: "#AAFFAA", title: "Talk1" },
+      { start: "14:10", duration: 20, color: "#AAAAFF", title: "Exercise2" },
+    ];
+
+    function parseTime(str) {
+      const [h, m] = str.split(':').map(Number);
+      return (h * 60 + m) * 60; // in seconds
+    }
+
+    function formatHHMM(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    }
+
+    const startTimeSec = parseTime(sessions[0].start);
+    const endTimeSec = parseTime(sessions[sessions.length - 1].start) + sessions[sessions.length - 1].duration * 60;
+    const totalDurationSec = endTimeSec - startTimeSec;
+
+    function getCurrentSecondsOfDay() {
+      const now = new Date();
+      return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    }
+
+    function updateUI() {
+      const nowSec = getCurrentSecondsOfDay();
+      let currentSession = sessions.find((s) => {
+        const start = parseTime(s.start);
+        const end = start + s.duration * 60;
+        return nowSec >= start && nowSec < end;
+      });
+
+      if (!currentSession) {
+        document.getElementById("top").textContent = "No current session";
+        document.getElementById("top").style.background = "#444";
+        document.getElementById("session-bar").style.width = "0%";
+        document.getElementById("session-label").textContent = "";
+      } else {
+        const sessionStartSec = parseTime(currentSession.start);
+        const elapsed = nowSec - sessionStartSec;
+        const remaining = Math.max(0, currentSession.duration * 60 - elapsed);
+        const percentRemaining = (remaining / (currentSession.duration * 60)) * 100;
+
+        document.getElementById("top").textContent = currentSession.title;
+        document.getElementById("top").style.background = currentSession.color;
+        document.getElementById("session-bar").style.width = `${percentRemaining}%`;
+        document.getElementById("session-bar").style.background = currentSession.color;
+        document.getElementById("session-label").textContent = `${Math.ceil(remaining / 60)} min left`;
+      }
+
+      const totalRemaining = Math.max(0, endTimeSec - nowSec);
+      const totalPercent = (totalRemaining / totalDurationSec) * 100;
+      document.getElementById("total-bar").style.width = `${totalPercent}%`;
+      document.getElementById("total-label").textContent = `${formatHHMM(totalRemaining)} left in workshop`;
+    }
+
+    setInterval(updateUI, 1000);
+    updateUI();
+  </script>
+</body>
+</html>
+

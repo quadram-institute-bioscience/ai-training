@@ -11,9 +11,35 @@ toc:
     title: Hands-on tasks
   - id: reading-list
     title: Reading List
+  - id: course-info
+    title: Course details
 ---
 
-## Introduction to Large Language Models {#intro}
+
+## Before
+
+* [Online form](https://forms.cloud.microsoft/e/h8ifhdFuxH)
+
+## Hands-on tasks {#tasks}
+
+* Prompt engineering
+  * [Different techniques]({{ site.baseurl }}/{% post_url 2025-03-10-techniques %})
+    * [Structured prompt: a trip to Norfolk]({{ site.baseurl }}/{% post_url 2025-03-10-example-prompts %})
+      * [Perplexity answer]({{ site.baseurl }}/{% post_url 2025-03-11-perplexity-trip %})
+* Literature tools
+  * Tools
+    * [Elicit](https://elicit.com): literature mining and extract information (review oriented)
+    * [SciSpace](https://www.scispace.com): literature mining and extract information (gen-ai)
+    * [Litmaps](https://app.litmaps.com/): network 
+* Running locally
+  * [Ollama]()
+
+## Reading List {#reading-list}
+
+* See [reading list]({{ '/intro-llm/reading/' | relative_url }})
+
+
+## Introduction to Large Language Models {#course-info}
 
 **Topics**
 
@@ -43,20 +69,3 @@ After the course, learners will be able to:
 | 4   | Effectively prompt and utilize generative AI tools (Claude, ChatGPT, Perplexity) for research-appropriate tasks |
 | 5   | Utilise literature mining AI-powered tools (such as Elicit) and understand their limitations                    |
 | 6   | Leverage coding assistants to generate, debug, and optimize code for research tasks                             |
-
-## Before
-
-* [Online form](https://forms.cloud.microsoft/e/h8ifhdFuxH)
-
-## Hands-on tasks {#tasks}
-
-* [Prompt engineering]()
-  * [Different techniques]({{ site.baseurl }}/{% post_url 2025-03-10-techniques %})
-    * [Structured prompt: a trip to Norfolk]({{ site.baseurl }}/{% post_url 2025-03-10-example-prompts %})
-      * [Perplexity answer]({{ site.baseurl }}/{% post_url 2025-03-11-perplexity-trip %})
-* [Literature]()
-* [Running locally]()
-
-## Reading List {#reading-list}
-
-* See [reading list]()

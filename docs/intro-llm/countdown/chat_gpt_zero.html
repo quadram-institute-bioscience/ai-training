@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workshop Scheduler</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+    .band {
+      height: 33.33vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2em;
+      text-align: center;
+    }
+    .progress-container {
+      position: relative;
+      width: 80%;
+      height: 30px;
+      background: #ddd;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      transition: width 1s linear;
+    }
+    .progress-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      line-height: 30px;
+      font-weight: bold;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="top" class="band"></div>
+
+  <div id="middle" class="band">
+    <div class="progress-container">
+      <div class="progress-bar" id="session-bar"></div>
+      <div class="progress-text" id="session-text"></div>
+    </div>
+  </div>
+
+  <div id="bottom" class="band">
+    <div class="progress-container">
+      <div class="progress-bar" id="total-bar" style="background: #333;"></div>
+    </div>
+  </div>
+
+  <script>
+    const sessions = [
+      { start: "12:50", duration: 10, color: "#FFAABB", title: "Warmup session" },
+      { start: "13:00", duration: 30, color: "#AAFFAA", title: "Talk1" },
+      { start: "13:30", duration: 20, color: "#AAAAFF", title: "Exercise2" },
+      // Add more here easily
+    ];
+
+  function parseTime(str) {
+    const [h, m] = str.split(':').map(Number);
+    return (h * 60 + m) * 60; // convert to seconds
+  }
+
+  const startTimeSec = parseTime(sessions[0].start);
+  const endTimeSec = parseTime(sessions[sessions.length - 1].start) + sessions[sessions.length - 1].duration * 60;
+  const totalDurationSec = endTimeSec - startTimeSec;
+
+  function getCurrentSecondsOfDay() {
+    const now = new Date();
+    return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  }
+
+  function updateUI() {
+    const nowSec = getCurrentSecondsOfDay();
+    let currentSession = sessions.find((s) => {
+      const start = parseTime(s.start);
+      const end = start + s.duration * 60;
+      return nowSec >= start && nowSec < end;
+    });
+
+    if (!currentSession) {
+      document.getElementById("top").textContent = "No current session";
+      document.getElementById("top").style.background = "#444";
+      document.getElementById("session-bar").style.width = "0%";
+      document.getElementById("session-text").textContent = "";
+    } else {
+      const sessionStartSec = parseTime(currentSession.start);
+      const elapsed = nowSec - sessionStartSec;
+      const remaining = Math.ceil((currentSession.duration * 60 - elapsed) / 60);
+      const percent = (elapsed / (currentSession.duration * 60)) * 100;
+
+      document.getElementById("top").textContent = currentSession.title;
+      document.getElementById("top").style.background = currentSession.color;
+      document.getElementById("session-bar").style.width = `${percent}%`;
+      document.getElementById("session-bar").style.background = currentSession.color;
+      document.getElementById("session-text").textContent = `${remaining} min left`;
+    }
+
+    const totalElapsed = nowSec - startTimeSec;
+    const totalPercent = Math.max(0, Math.min(100, (totalElapsed / totalDurationSec) * 100));
+    document.getElementById("total-bar").style.width = `${totalPercent}%`;
+  }
+
+  setInterval(updateUI, 1000);
+  updateUI();
+</script></body>
+</html>
+
