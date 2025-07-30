@@ -4,7 +4,7 @@ title: The Course
 
 ## The Course
 
-<img src="{% link  /examples/images/gpt-favicon.png %}" width="20%" style="float: right;">
+<img src="{{ site.baseurl}}/{% link  /examples/images/gpt-favicon.png %}" width="20%" style="float: right;">
 This course provides a comprehensive introduction to Large Language Models (LLMs) and their practical applications. 
 You'll learn about the fundamentals of machine learning, focusing on why LLMs are not intelligent and can confidently 
 generate wrong information (but in a nice English!).

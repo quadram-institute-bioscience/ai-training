@@ -13,4 +13,4 @@ After working for 4 years for a sequencing company in Italy, I moved to the UK j
 Here I did a lot of [bioinformatics training](https://www.telatin.com/bioinformatics/microbiome-bioinformatics/index.html),
 including this entry level overview of LLMs :smile:
 
-<img src="{% link img/andrea-telatin.png %}" alt="Andrea Telatin" style="width: 33%;"/>
+<img src="{{ site.baseurl }}/{% link /img/andrea-telatin.png %}" alt="Andrea Telatin" style="width: 33%;"/>

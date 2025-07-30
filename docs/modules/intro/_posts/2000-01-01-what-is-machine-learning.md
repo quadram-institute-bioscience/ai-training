@@ -10,7 +10,7 @@ make decisions from data without being explicitly programmed for every possible 
 
 #### A first example: linear regression
 
-![example of linear regression chart]({% link img/1-linear.png %})
+![example of linear regression chart]({{ site.baseurl }}/{% link img/1-linear.png %})
 
 Linear regression is one of the simplest machine learning models. 
 It tries to find the best straight line that fits a set of data points.
@@ -25,10 +25,10 @@ The blue line is the model. It uses the formula:
 > y = b + ax
 
 Where:
-* x is the weight (input feature),
-* y is the mpg (output/label),
-* a is the slope (how much mpg changes per unit of weight),
-* b is the intercept (mpg when weight is zero).
+* _x_ is the weight (input feature),
+* _y_ is the mpg (output/label),
+* _a_ is the slope (how much mpg changes per unit of weight),
+* _b_ is the intercept (mpg when weight is zero).
 
 The goal of the model is to predict mpg given the weight of a car.
 The line minimizes the overall distance to all the points — making it the “best guess” based on the pattern in the data.
@@ -50,7 +50,7 @@ But when you stack and combine these neurons across layers, the network can lear
 
 There is a famous data set called Iris. Iris is a flower that comes in three different species, .... The dataset consists of 4 measures from flowers from different species, and in the dataset the species is annotated (**label**).
 
-![The famous iris dataset]({% link img/2-iris.png %})
+![The famous iris dataset]({{ site.baseurl }}/{% link img/2-iris.png %})
 
 If we receive a new set of measures, can we predict the species? We can perform an exploratory analysis to see that, indeed, these measures are quite distintively
 linked to the species.
@@ -59,7 +59,7 @@ linked to the species.
  since we have a little set with a lot of measures it's wise to split it in two: First part will be used to train the network, which means feeding the data and tuning the weights until the predictions are correct.
  Then we can use the second half (test set) to check if the mode is able to correctly predict the species, or if we had a case of **overfitting** (i.e. the model learned by heart the data without finding a pattern)
 
-![example of linear regression chart]({% link img/2-iris-nn.png %})
+![example of linear regression chart]({{ site.baseurl }}/{% link img/2-iris-nn.png %})
 
 :bulb: **key aspect**: a neural network learns from data presented as vectors (list of numbers) and has a risk of overfitting.
 
@@ -74,4 +74,4 @@ Each image is made up of pixels, and we can flatten these pixel values into a lo
 This vector becomes the input to the neural network, which then learns to recognize patterns in the pixel data and classify the image into the correct digit.
 
 :arrow_right: **the excellent tutorial** from 3blue1brown (:link: [Neural Networks tutorial](https://www.3blue1brown.com/lessons/neural-networks
-)) will guide you throughout the process of training a neural network, and will even let you experiment with you own handwriting :)
+)) will guide you throughout the process of training a neural network, and will even let you experiment with you own handwriting :smile:

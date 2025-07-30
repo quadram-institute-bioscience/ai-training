@@ -10,4 +10,4 @@ services:
     - .bundler:/opt/bundler
     environment:
     - BUNDLE_PATH=/opt/bundler
-    command: bash -c "bundle install && bundle exec jekyll serve -H 0.0.0.0 --watch"
+    command: bash -c "bundle install && bundle exec jekyll serve -H 0.0.0.0 --baseurl /ai-training --watch"

@@ -10,12 +10,12 @@ While Large Language Models are powerful tools, they have significant limitation
 
 Consider this prompt and try to answer yourself:
 
-![A prompt]({% link img/5-prompt.png %})
+![A prompt]({{ site.baseurl }}/{% link img/5-prompt.png %})
 
 
 This is the answer that an old version of ChatGPT gave:
 
-![A solution (wrong)]({% link img/5-gpt.png %})
+![A solution (wrong)]({{ site.baseurl }}/{% link img/5-gpt.png %})
 
 
 

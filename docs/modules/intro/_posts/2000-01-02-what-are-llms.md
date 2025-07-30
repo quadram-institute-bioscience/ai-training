@@ -4,7 +4,7 @@ title: What are Large Language Models?
 
 ## Predicting the next word of a sentence
 
-![keyboard]({% link img/3-keyboard.png %})
+![keyboard]({{ site.baseurl }}/{% link img/3-keyboard.png %})
 
 You have a simple language mode in your pockets: the keyboard of your mobile phone is programmed to suggest some possible words
 when you type a message.
