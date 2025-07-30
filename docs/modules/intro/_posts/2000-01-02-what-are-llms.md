@@ -17,7 +17,11 @@ and associates frequencies of observed triplets.
 
 Large Language Models (LLMs) are a type of artificial intelligence system trained on vast amounts of text data to understand and generate human-like language.
 
-{% youtube LPZh9BOjkQs %}
+<div class="video">
+<figure>
+<iframe width="640" height="480" src="https://www.youtube.com/embed/LPZh9BOjkQs" frameborder="0" allowfullscreen></iframe>
+</figure>
+</div>
 
 :bulb: At their core, they are a **powerful model to predict the next word**, but thanks to a system prompt, they can be turned in **chat bots**
 
@@ -26,4 +30,9 @@ Large Language Models (LLMs) are a type of artificial intelligence system traine
 With two new papers, Anthropic's researchers have taken significant steps towards understanding the circuits that underlie an AI model’s thoughts. 
 This video summarises some findings: 
 
-{% youtube  Bj9BD2D3DzA %}
+<div class="video">
+<figure>
+<iframe width="640" height="480" src="https://www.youtube.com/embed/Bj9BD2D3DzA" frameborder="0" allowfullscreen></iframe>
+</figure>
+</div>
+ 

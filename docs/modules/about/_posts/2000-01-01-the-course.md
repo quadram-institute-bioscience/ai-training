@@ -4,7 +4,24 @@ title: The Course
 
 ## The Course
 
-This course provides a comprehensive introduction to Large Language Models (LLMs) and their practical applications. You'll learn about the fundamentals of machine learning, explore various LLM tools and techniques, and gain hands-on experience with both cloud-based and local AI solutions.
+<img src="{% link  /examples/images/gpt-favicon.png %}" width="20%" style="float: right;">
+This course provides a comprehensive introduction to Large Language Models (LLMs) and their practical applications. 
+You'll learn about the fundamentals of machine learning, focusing on why LLMs are not intelligent and can confidently 
+generate wrong information (but in a nice English!).
+At the same time, with some pre-cautions, we can benefit from language models, and even explore how to run some (smaller)
+model **locally** (in your computer, without sending any data to third parties).
+
+
+## This website
+
+This is a companion website with a short summary of the topic covered with:
+
+Icon              | Meaning
+:----------------:|----------------------------------------
+:arrow_right:     | **further reading** material. The most important parts are highlighted by this icon.
+:bulb:            | Key points highlighted by this icon.
+:notebook:        | Exercise
+:construction:    | Work in progress
 
 ## Introduction to Large Language Models {#course-info}
 
@@ -35,19 +52,7 @@ After the course, learners will be able to:
 | 3   | Select appropriate deployment models (local vs. cloud) based on data sensitivity and privacy requirements       |
 | 4   | Effectively prompt and utilize generative AI tools (Claude, ChatGPT, Perplexity) for research-appropriate tasks |
 | 5   | Utilise literature mining AI-powered tools (such as Elicit) and understand their limitations                    |
-
-### Course Structure
-
-The course is divided into 6 modules:
-
  
-2. **Intro** - Fundamentals of ML and LLMs
-3. **Using LLMs** - Practical application techniques
-4. **Local AI** - Self-hosted AI solutions
-5. **Literature** - Research and analysis tools
-6. **Coding** - AI-assisted development
-7. **Exercises** - Hands-on practice activities
-
 ### Prerequisites
 
 - Basic computer literacy
