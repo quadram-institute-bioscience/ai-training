@@ -1,3 +1,3 @@
-title: Course-in-a-Box
-description: An open-source project for creating online courses, built by <a href="https://www.p2pu.org">P2PU</a>
-modules: ["about", "intro", "using-llms", "local-ai", "literature", "coding", "exercises"]
+title: Introduction to LLMs
+description: An <a href="https://www.nbi.ac.uk/">NBI</a> course to get started understading how to use Large Language Models
+modules: ["about", "intro", "using-llms", "local-ai", "literature", "coding"]

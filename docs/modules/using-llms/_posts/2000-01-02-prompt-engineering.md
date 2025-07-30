@@ -14,38 +14,46 @@ Prompt engineering involves:
 - **Structuring Input**: Organizing information effectively
 - **Iterating and Refining**: Improving prompts based on results
 
+:bulb: we saw how the **transformer** allows to "soak" the context. Therefore, the more relevant and specific context we provide, the better the results.
+
+:arrow_right: Read more about this topic from [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) or the   [Best Practices for OpenAI API](https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api) 
 ### Core Principles
 
 #### Clarity and Specificity
-```
-❌ Poor: "Write about dogs"
-✅ Good: "Write a 300-word informative article about golden retriever training techniques for new dog owners"
-```
+
+Since the transformers "soaks" context, the more the better. Consider this examples:
+* ❌ Poor: "Write about dogs"
+* ✅ Better: "Write a 300-word informative article about golden retriever training techniques for new dog owners"
+
+You can add more context like:
+* What to focus on
+* The style
+
 
 #### Context Provision
-```
-❌ Poor: "Translate this"
-✅ Good: "Translate this marketing email from English to Spanish, maintaining a professional but friendly tone"
-```
+* ❌ Poor: "Translate this"
+* ✅ Better: "Translate this marketing email from English to Spanish, maintaining a professional but friendly tone"
+
 
 #### Task Decomposition
-```
-❌ Poor: "Analyze this data and give recommendations"
-✅ Good: "First, summarize the key trends in this sales data. Then, identify the top 3 performance issues. Finally, suggest specific action items for each issue."
-```
+
+* ❌ Poor: "Analyze this data and give recommendations"
+* ✅ Good: "First, summarize the key trends in this sales data. Then, identify the top 3 performance issues. Finally, suggest specific action items for each issue."
+
 
 ### Essential Techniques
 
-#### 1. Role Playing
+#### :one: Role Playing
 Assign the AI a specific role or persona:
 
 ```
-"You are an experienced software engineer. Review this code and suggest improvements for performance and readability."
+"You are an experienced software engineer.
+Review this code and suggest improvements for performance and readability."
 
 "Act as a patient teacher explaining quantum physics to a high school student."
 ```
 
-#### 2. Few-Shot Learning
+#### :two: Few-Shot Learning
 Provide examples of desired input-output pairs:
 
 ```
@@ -61,7 +69,7 @@ Email: "Click here for amazing weight loss secrets!"
 Classification: ?
 ```
 
-#### 3. Chain of Thought
+#### :three: Chain of Thought
 Guide the model through step-by-step reasoning:
 
 ```
@@ -73,7 +81,7 @@ Step 2: Multiply the number by the decimal
 Step 3: Show the final answer"
 ```
 
-#### 4. Output Formatting
+#### :four: Output Formatting
 Specify exactly how you want the response structured:
 
 ```
@@ -86,7 +94,7 @@ Specify exactly how you want the response structured:
 Format as JSON with these exact keys."
 ```
 
-### Advanced Techniques
+### More Techniques
 
 #### Tree of Thoughts
 Explore multiple reasoning paths:
@@ -108,7 +116,8 @@ Include principles and values:
 - Respect for individual autonomy
 - Minimizing harm to all parties
 - Fairness and justice
-- Long-term consequences"
+- Long-term consequences
+..."
 ```
 
 #### Negative Prompting
@@ -125,7 +134,8 @@ Explicitly state what to avoid:
 
 ### Prompt Structure Templates
 
-#### Basic Structure
+Example of structured prompt:
+
 ```
 [ROLE] You are a [specific role]
 [CONTEXT] Given this context: [background information]
@@ -134,7 +144,8 @@ Explicitly state what to avoid:
 [CONSTRAINTS] Requirements: [limitations and guidelines]
 ```
 
-#### Analysis Template
+A template for an analysis:
+
 ```
 "Analyze the following [content type]:
 
@@ -149,7 +160,8 @@ Provide:
 Focus on [specific aspect] and consider [context]."
 ```
 
-#### Creative Writing Template
+An example of **creative** writing:
+
 ```
 "Write a [content type] that:
 - Genre: [specify genre]
@@ -159,68 +171,11 @@ Focus on [specific aspect] and consider [context]."
 - Key elements to include: [list]
 - Style: [writing style preference]"
 ```
-
-### Common Prompt Patterns
-
-#### Question-Answer Format
-```
-"Answer these questions about [topic]:
-Q1: What is [specific aspect]?
-Q2: How does [process] work?
-Q3: What are the benefits of [approach]?
-Q4: What challenges might arise?"
-```
-
-#### Comparison Format
-```
-"Compare [Option A] and [Option B] across these dimensions:
-- Cost
-- Performance
-- Ease of use
-- Scalability
-- Support
-
-Provide a recommendation based on [specific criteria]."
-```
-
-#### Problem-Solution Format
-```
-"Given this problem: [problem description]
-
-1. Identify root causes
-2. Brainstorm potential solutions
-3. Evaluate each solution
-4. Recommend the best approach
-5. Outline implementation steps"
-```
-
-### Optimization Strategies
-
-#### A/B Testing Prompts
-- Create multiple versions of the same prompt
-- Test different phrasings and structures
-- Compare output quality and consistency
-- Keep successful patterns
-
-#### Iterative Refinement
-1. **Start Simple**: Basic version of your prompt
-2. **Analyze Output**: Identify weaknesses or missing elements
-3. **Refine**: Add specificity, examples, or constraints
-4. **Test Again**: Evaluate improved results
-5. **Repeat**: Continue until satisfied
-
-#### Prompt Chaining
-Break complex tasks into smaller prompts:
-
-```
-Prompt 1: "Extract key facts from this document"
-Prompt 2: "Using these facts, identify main themes"
-Prompt 3: "Based on the themes, write a summary"
-```
-
+ 
 ### Domain-Specific Prompting
 
-#### Code Generation
+* Code Generation
+
 ```
 "Write a Python function that:
 - Function name: calculate_compound_interest
@@ -230,7 +185,8 @@ Prompt 3: "Based on the themes, write a summary"
 - Style: Follow PEP 8 conventions"
 ```
 
-#### Data Analysis
+* Data Analysis
+
 ```
 "Analyze this dataset:
 [DATA]
@@ -240,52 +196,4 @@ Prompt 3: "Based on the themes, write a summary"
 3. Detect outliers or anomalies
 4. Suggest visualization approaches
 5. Recommend next analysis steps"
-```
-
-#### Content Marketing
-```
-"Create a social media post for [platform]:
-- Product: [product name]
-- Audience: [target demographic]
-- Goal: [engagement/awareness/conversion]
-- Tone: [brand voice]
-- Include: relevant hashtags and call-to-action
-- Length: [character limit]"
-```
-
-### Troubleshooting Common Issues
-
-#### Vague or Generic Responses
-**Problem**: Output lacks specificity
-**Solution**: Add more context, examples, and constraints
-
-#### Inconsistent Results
-**Problem**: Different outputs for same prompt
-**Solution**: Lower temperature, add more structure, use examples
-
-#### Off-topic Responses
-**Problem**: Model doesn't follow instructions
-**Solution**: Clearer task definition, explicit constraints, role specification
-
-#### Incomplete Answers
-**Problem**: Missing important aspects
-**Solution**: Explicitly list required components, use numbered structure
-
-### Best Practices Checklist
-
-✅ **Be Specific**: Use precise language and clear instructions
-✅ **Provide Context**: Include relevant background information
-✅ **Use Examples**: Show desired input-output patterns
-✅ **Structure Output**: Specify format and organization
-✅ **Set Constraints**: Define limits and requirements
-✅ **Test and Iterate**: Refine based on results
-✅ **Document Success**: Save effective prompts for reuse
-✅ **Verify Results**: Check outputs for accuracy and relevance
-
-### Practice Exercises
-
-1. **Rewrite Basic Prompts**: Take simple prompts and enhance them with techniques learned
-2. **Template Creation**: Develop templates for your common tasks
-3. **A/B Testing**: Create variations of prompts and compare results
-4. **Domain Adaptation**: Adapt general techniques to your specific field
-5. **Chain Building**: Practice breaking complex tasks into prompt sequences
+``` 

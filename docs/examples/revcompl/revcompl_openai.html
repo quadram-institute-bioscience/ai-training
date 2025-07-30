@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DNA RevCompl</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: #3f51b5;
+      color: white;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #input-section {
+      padding: 15px;
+      background-color: #f5f5f5;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      font-family: monospace;
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    #output-section {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #sequence-list {
+      width: 250px;
+      background: #e3e3e3;
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+    }
+
+    #sequence-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #sequence-list li {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #ccc;
+    }
+
+    #sequence-list li:hover, #sequence-list li.active {
+      background-color: #d0d0d0;
+    }
+
+    #revcomp-display {
+      padding: 15px;
+      flex: 1;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <header>DNA RevCompl</header>
+
+  <div id="input-section">
+    <textarea id="dna-input" placeholder="Paste your DNA or FASTA sequences here..."></textarea>
+    <button onclick="processSequences()">Process</button>
+  </div>
+
+  <div id="output-section">
+    <div id="sequence-list"><ul id="seq-list"></ul></div>
+    <div id="revcomp-display">Reverse complement will appear here...</div>
+  </div>
+
+  <script>
+    const IUPAC_COMPLEMENT = {
+      A: 'T', T: 'A', G: 'C', C: 'G',
+      R: 'Y', Y: 'R', S: 'S', W: 'W',
+      K: 'M', M: 'K', B: 'V', D: 'H',
+      H: 'D', V: 'B', N: 'N',
+      a: 't', t: 'a', g: 'c', c: 'g',
+      r: 'y', y: 'r', s: 's', w: 'w',
+      k: 'm', m: 'k', b: 'v', d: 'h',
+      h: 'd', v: 'b', n: 'n'
+    };
+
+    let sequences = [];
+
+    function reverseComplement(seq) {
+      return seq
+        .split('')
+        .reverse()
+        .map(base => IUPAC_COMPLEMENT[base] || '?')
+        .join('');
+    }
+
+    function parseInput(input) {
+      if (!input.includes('>')) {
+        return [{
+          header: 'Untitled Sequence',
+          sequence: input.replace(/\s+/g, '')
+        }];
+      }
+
+      const entries = [];
+      let lines = input.split('\n');
+      let currentHeader = '';
+      let currentSeq = [];
+
+      for (let line of lines) {
+        if (line.startsWith('>')) {
+          if (currentHeader) {
+            entries.push({
+              header: currentHeader,
+              sequence: currentSeq.join('')
+            });
+          }
+          currentHeader = line.slice(1).trim();
+          currentSeq = [];
+        } else {
+          currentSeq.push(line.trim());
+        }
+      }
+
+      if (currentHeader) {
+        entries.push({
+          header: currentHeader,
+          sequence: currentSeq.join('')
+        });
+      }
+
+      return entries;
+    }
+
+    function processSequences() {
+      const input = document.getElementById('dna-input').value;
+      sequences = parseInput(input);
+
+      const list = document.getElementById('seq-list');
+      list.innerHTML = '';
+      sequences.forEach((seq, idx) => {
+        const li = document.createElement('li');
+        li.textContent = seq.header;
+        li.onclick = () => showRevComp(idx);
+        list.appendChild(li);
+      });
+
+      if (sequences.length > 0) {
+        showRevComp(0);
+      }
+    }
+
+    function showRevComp(index) {
+      document.querySelectorAll('#seq-list li').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+      });
+      const seq = sequences[index];
+      const revcomp = reverseComplement(seq.sequence);
+      document.getElementById('revcomp-display').textContent = revcomp;
+    }
+  </script>
+</body>
+</html>
+

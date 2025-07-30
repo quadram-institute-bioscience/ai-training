@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DNA RevCompl</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .input-section {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .output-section {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+        .sequence-list {
+            width: 25%;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow-y: auto;
+        }
+        .main-output {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Sequence list styling */
+        .sequence-list li {
+            padding: 8px;
+            margin: 2px 0;
+            cursor: pointer;
+            list-style-type: none;
+            border-radius: 3px;
+        }
+        
+        .sequence-list li:hover {
+            background-color: #e6f3ff;
+        }
+
+        .sequence-list li.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* Prevent text selection on hover */
+        .sequence-list li {
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DNA RevCompl</h1>
+    </div>
+
+    <div class="input-section">
+        <p>Paste your DNA sequence(s) below:</p>
+        <textarea id="input" placeholder="Enter your DNA sequence(s) here..."></textarea>
+    </div>
+
+    <div class="output-section">
+        <div class="sequence-list">
+            <h3>Sequences:</h3>
+            <ul id="sequenceList"></ul>
+        </div>
+        <div class="main-output">
+            <h3>Reverse Complement</h3>
+            <div id="revCompOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const complement = {
+            'A': 'T', 'T': 'A', 'C': 'C', 'G': 'G',
+            'R': 'Y', 'Y': 'R', 'S': 'S', 'W': 'W',
+            'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
+            'H': 'D', 'V': 'B'
+        };
+
+        function reverseComplement(s) {
+            return s.split('').reverse().map(c => complement[c] || c).join('');
+        }
+
+        function processInput() {
+            const input = document.getElementById('input').value;
+            const lines = input.split('\n');
+            
+            let sequences = [];
+            let currentSequence = '';
+            let currentName = '';
+
+            for (let line of lines) {
+                if (line.startsWith('>')) {
+                    if (currentName) {
+                        sequences.push({ name: currentName, sequence: currentSequence });
+                    }
+                    currentName = line.substring(1).trim();
+                    currentSequence = '';
+                } else {
+                    currentSequence += line.replace(/[^ACGTURYMKWSBDHVN]/gi, '');
+                }
+            }
+
+            if (currentName) {
+                sequences.push({ name: currentName, sequence: currentSequence });
+            } else {
+                // Handle non-FASTA input
+                const cleanSequence = input.replace(/\s/g, '').replace(/[^ACGTURYMKWSBDHVN]/gi, '');
+                if (cleanSequence.length > 0) {
+                    sequences.push({ name: 'Sequence', sequence: cleanSequence });
+                }
+            }
+
+            updateOutput(sequences);
+        }
+
+        function updateOutput(sequences) {
+            const list = document.getElementById('sequenceList');
+            list.innerHTML = '';
+            
+            for (const seq of sequences) {
+                const li = document.createElement('li');
+                li.className = 'sequence-item';
+                li.innerHTML = `<span>${seq.name}</span>`;
+                li.style.cursor = 'pointer';
+                li.addEventListener('click', () => showRevComp(seq.sequence, li));
+                list.appendChild(li);
+            }
+
+            if (sequences.length > 0) {
+                showRevComp(sequences[0].sequence, list.children[0]);
+            }
+        }
+
+        function showRevComp(sequence, listItem) {
+            // Remove selected class from all items
+            const list = document.getElementById('sequenceList');
+            const items = list.getElementsByClassName('sequence-item');
+            Array.from(items).forEach(item => item.classList.remove('selected'));
+            
+            // Add selected class to clicked item
+            listItem.classList.add('selected');
+
+            const output = document.getElementById('revCompOutput');
+            const revComp = reverseComplement(sequence.toUpperCase());
+            output.textContent = revComp;
+        }
+
+        // Event listener for input changes
+        document.getElementById('input').addEventListener('input', processInput);
+
+        // Initial test case
+        document.getElementById('input').value = `>Test1
+ATGCTAGCATCGTA
+>Test2
+GGGGAAAAACCCCG` ;
+        processInput();
+    </script>
+</body>
+</html>
