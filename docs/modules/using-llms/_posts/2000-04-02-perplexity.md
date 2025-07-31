@@ -24,9 +24,14 @@ there are two buttons at the bottom, one for **research** and one for **labs**.
 This is used to retrieve multiple documents (sources) related to your query. 
 This means your query will be expanded and the output more comprehensive.
 
+:construction: Work in progress
+
 ### :two: Labs
 
 This is to generate files. This could be
+
 * coding
 * project management
 * creative output
+
+:construction: Work in progress

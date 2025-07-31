@@ -18,8 +18,6 @@ This is the answer that an old version of ChatGPT gave:
 ![A solution (wrong)]({{ site.baseurl }}/{% link img/5-gpt.png %})
 
 
-
-
 **Why is that?**
 
 Let's focus on a key aspect: LLMs are trained on a vast amount of text. Including this common HR riddle:
