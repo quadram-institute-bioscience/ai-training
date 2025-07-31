@@ -15,7 +15,7 @@ make decisions from data without being explicitly programmed for every possible 
 Linear regression is one of the simplest machine learning models. 
 It tries to find the best straight line that fits a set of data points.
 
-In the image, each pink dot represents a car:
+In the image (from [Google ML training](https://developers.google.com/machine-learning/crash-course/linear-regression)), each pink dot represents a car:
 
 * The x-axis (horizontal) shows the car’s weight in thousands of pounds.
 * The y-axis (vertical) shows its fuel efficiency in miles per gallon (mpg).
