@@ -31,3 +31,4 @@ This approach offers unique advantages for privacy, control, and customization.
 - One-time setup cost
 
 :bulb: Apple computers now feature a chip (Apple Silicon) with a relatively powerful GPU, that can run reasonably large models if there is enough memory available.
+

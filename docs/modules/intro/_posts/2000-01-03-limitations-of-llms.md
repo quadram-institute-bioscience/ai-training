@@ -27,4 +27,13 @@ The four people walk at different speeds: one can cross the bridge in 1 minute, 
 
 :bulb: **training data effect:** imagine someone who has read a lot of puzzle books and is really good at remembering the answers. But if you slightly change the puzzle—or ask them to show their work—they might still give a “familiar” answer that doesn’t fit perfectly.
 
+### AI is everywhere
+
+![Google search with AI hallucination]({{ site.baseurl }}/{% link img/google-search.png %})
+
+Google decided to incorporate an AI overview in their search engine. 
+The training data used probably contains unreliable websites with satyrical or ironical answers given to legitimate questions, and this explains odd results.
+
+This is not a problem if we use LLMs as tools, instead of considering them oracles with ready-to-use answers :crystal_ball:.
+
 :construction: Work in progress

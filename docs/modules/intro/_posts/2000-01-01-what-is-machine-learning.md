@@ -50,7 +50,13 @@ But when you stack and combine these neurons across layers, the network can lear
 
 There is a famous data set called Iris. Iris is a flower that comes in three different species, .... The dataset consists of 4 measures from flowers from different species, and in the dataset the species is annotated (**label**).
 
-![The famous iris dataset]({{ site.baseurl }}/{% link img/2-iris.png %})
+
+<figure style="padding: 6px; font-size: 0.8em; color: #606060; background: #F0F0F0;">
+    <a href="https://en.wikipedia.org/wiki/Iris_flower_data_set">
+    <img src="{{ site.baseurl }}/{% link img/2-iris.png %}" alt="The famous iris dataset">
+    </a>
+    <figcaption><span style="font-size: 0.8em; color: #606060;">The famous iris dataset.</span></figcaption>
+</figure>
 
 If we receive a new set of measures, can we predict the species? We can perform an exploratory analysis to see that, indeed, these measures are quite distintively
 linked to the species.
@@ -59,7 +65,14 @@ linked to the species.
  since we have a little set with a lot of measures it's wise to split it in two: First part will be used to train the network, which means feeding the data and tuning the weights until the predictions are correct.
  Then we can use the second half (test set) to check if the mode is able to correctly predict the species, or if we had a case of **overfitting** (i.e. the model learned by heart the data without finding a pattern)
 
-![example of linear regression chart]({{ site.baseurl }}/{% link img/2-iris-nn.png %})
+<figure style="padding: 6px; font-size: 0.8em; color: #606060; background: #F0F0F0;">
+    <a href="https://natureofcode.com/neural-networks/">
+    <img src="{{ site.baseurl }}/{% link img/2-iris-nn.png %}" alt="Iris classification neural network">
+    </a>
+    <figcaption><span style="font-size: 0.8em; color: #606060;">Example from <a href="https://natureofcode.com/neural-networks/">natureofcode.com</a>.</span></figcaption>
+</figure>
+ 
+
 
 :bulb: **key aspect**: a neural network learns from data presented as vectors (list of numbers) and has a risk of overfitting.
 

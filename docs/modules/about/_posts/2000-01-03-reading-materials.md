@@ -2,11 +2,10 @@
 title: Reading Materials
 ---
 
-## Reading Materials
+## Foundation
 
 This page contains essential and supplementary reading materials to support your learning throughout the course.
 All the readings are **entry level**, and usually require no specialized knowledge.
-
 
 #### Books
 - **[The StatQuest Illustrated Guide To Machine Learning](https://www.amazon.com/StatQuest-Illustrated-Guide-Machine-Learning/dp/B0BLM4TLPY)** by Josh Starmer  
@@ -22,4 +21,9 @@ And foundation concepts:
 - [Essence of Calculus](https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi)
 - [Khan Academy: Statistics and Probability](https://www.youtube.com/playlist?list=PL1328115D3D8A2566)  
 
- 
+## Using LLMs
+
+### Prompt engineering
+* [Coursera: Prompt engineering course](https://www.coursera.org/specializations/prompting-essentials-google) by Google
+* [Prompt engineering guide](https://www.gov.uk/government/publications/ai-insights/ai-insights-prompt-engineering-html) in the :crown: UK Gov website
+* [Prompt engineering best practices](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview) by Anthropic (Claude)

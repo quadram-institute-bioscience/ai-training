@@ -1,5 +1,8 @@
 # basic configuration
 markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
 permalink: /:categories/:title/
 baseurl: "/ai-training"
 
