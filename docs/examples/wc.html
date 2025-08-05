@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Count</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            background: #f5f5f5;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 1fr auto;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            background: #e8e8e8;
+            border-right: 1px solid #d1d1d1;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #d1d1d1;
+            background: #ddd;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .new-document-btn {
+            width: 100%;
+            padding: 8px 16px;
+            margin-top: 12px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .new-document-btn:hover {
+            background: #0056cc;
+        }
+
+        .document-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .document-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #d1d1d1;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .document-item:hover {
+            background: #d1d1d1;
+        }
+
+        .document-item.active {
+            background: #007aff;
+            color: white;
+        }
+
+        .document-title {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .document-meta {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .document-actions {
+            margin-top: 8px;
+        }
+
+        .delete-btn {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        /* Main Panel */
+        .main-panel {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .document-title-input {
+            font-size: 24px;
+            font-weight: 600;
+            padding: 20px 24px 12px;
+            border: none;
+            outline: none;
+            background: transparent;
+            resize: none;
+        }
+
+        .document-text {
+            flex: 1;
+            padding: 0 24px 80px;
+            border: none;
+            outline: none;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+        }
+
+        .placeholder h3 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 280px;
+            height: 60px;
+            background: rgba(248, 248, 248, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #666;
+            gap: 24px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .footer {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Documents</h2>
+            <button class="new-document-btn" onclick="createNewDocument()">New Document</button>
+        </div>
+        <div class="document-list" id="documentList">
+            <!-- Documents will be populated here -->
+        </div>
+    </div>
+
+    <!-- Main Panel -->
+    <div class="main-panel" id="mainPanel">
+        <div class="placeholder">
+            <h3>Select a document</h3>
+            <p>Choose a document from the sidebar or create a new one</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer" id="footer" style="display: none;">
+        <div class="stat">
+            <div class="stat-value" id="charCount">0</div>
+            <div class="stat-label">Characters</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="wordCount">0</div>
+            <div class="stat-label">Words</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="lineCount">0</div>
+            <div class="stat-label">Lines</div>
+        </div>
+    </div>
+
+    <script>
+        // Document storage and management
+        class DocumentManager {
+            constructor() {
+                this.documents = this.loadDocuments();
+                this.currentDoc = null;
+                this.init();
+            }
+
+            // Load documents from localStorage
+            loadDocuments() {
+                const stored = localStorage.getItem('wordcount_documents');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            // Save documents to localStorage
+            saveDocuments() {
+                localStorage.setItem('wordcount_documents', JSON.stringify(this.documents));
+            }
+
+            // Generate unique ID for new documents
+            generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            }
+
+            // Create new document
+            createDocument(title = '', text = '') {
+                const now = new Date().toISOString();
+                const doc = {
+                    id: this.generateId(),
+                    title: title || 'Untitled Document',
+                    text: text,
+                    dateAdded: now,
+                    dateLastEdited: now
+                };
+                
+                this.documents.unshift(doc); // Add to beginning
+                this.saveDocuments();
+                return doc;
+            }
+
+            // Update document
+            updateDocument(id, updates) {
+                const docIndex = this.documents.findIndex(doc => doc.id === id);
+                if (docIndex !== -1) {
+                    this.documents[docIndex] = {
+                        ...this.documents[docIndex],
+                        ...updates,
+                        dateLastEdited: new Date().toISOString()
+                    };
+                    this.saveDocuments();
+                    return this.documents[docIndex];
+                }
+                return null;
+            }
+
+            // Delete document
+            deleteDocument(id) {
+                this.documents = this.documents.filter(doc => doc.id !== id);
+                this.saveDocuments();
+                
+                // If current document was deleted, clear the editor
+                if (this.currentDoc && this.currentDoc.id === id) {
+                    this.currentDoc = null;
+                    this.showPlaceholder();
+                }
+            }
+
+            // Get document by ID
+            getDocument(id) {
+                return this.documents.find(doc => doc.id === id);
+            }
+
+            // Initialize the application
+            init() {
+                this.renderDocumentList();
+                
+                // If no documents exist, create a sample one
+                if (this.documents.length === 0) {
+                    this.createDocument('Welcome', 'Welcome to Word Count!\n\nThis is your first document. Start typing to see the word, character, and line counts update in real-time.\n\nYour documents are automatically saved locally in your browser.');
+                    this.renderDocumentList();
+                }
+            }
+
+            // Render the document list in sidebar
+            renderDocumentList() {
+                const listElement = document.getElementById('documentList');
+                listElement.innerHTML = '';
+
+                this.documents.forEach(doc => {
+                    const item = document.createElement('div');
+                    item.className = 'document-item';
+                    if (this.currentDoc && this.currentDoc.id === doc.id) {
+                        item.classList.add('active');
+                    }
+
+                    // Format date for display
+                    const date = new Date(doc.dateLastEdited).toLocaleDateString();
+                    
+                    item.innerHTML = `
+                        <div class="document-title">${doc.title}</div>
+                        <div class="document-meta">Modified: ${date}</div>
+                        <div class="document-actions">
+                            <button class="delete-btn" onclick="event.stopPropagation(); docManager.deleteDocument('${doc.id}'); docManager.renderDocumentList();">Delete</button>
+                        </div>
+                    `;
+
+                    item.onclick = () => this.loadDocument(doc.id);
+                    listElement.appendChild(item);
+                });
+            }
+
+            // Load document into editor
+            loadDocument(id) {
+                const doc = this.getDocument(id);
+                if (!doc) return;
+
+                this.currentDoc = doc;
+                this.showEditor(doc);
+                this.renderDocumentList(); // Update active state
+            }
+
+            // Show the editor with document content
+            showEditor(doc) {
+                const mainPanel = document.getElementById('mainPanel');
+                const footer = document.getElementById('footer');
+
+                mainPanel.innerHTML = `
+                    <textarea class="document-title-input" 
+                              placeholder="Document Title" 
+                              oninput="docManager.updateTitle(this.value)">${doc.title}</textarea>
+                    <textarea class="document-text" 
+                              placeholder="Start typing..." 
+                              oninput="docManager.updateText(this.value)">${doc.text}</textarea>
+                `;
+
+                footer.style.display = 'flex';
+                this.updateStats(doc.text);
+            }
+
+            // Show placeholder when no document is selected
+            showPlaceholder() {
+                const mainPanel = document.getElementById('mainPanel');
+                const footer = document.getElementById('footer');
+
+                mainPanel.innerHTML = `
+                    <div class="placeholder">
+                        <h3>Select a document</h3>
+                        <p>Choose a document from the sidebar or create a new one</p>
+                    </div>
+                `;
+
+                footer.style.display = 'none';
+            }
+
+            // Update document title
+            updateTitle(title) {
+                if (!this.currentDoc) return;
+                
+                // Use first few words if title is empty
+                if (!title.trim() && this.currentDoc.text) {
+                    title = this.currentDoc.text.split(' ').slice(0, 3).join(' ') + '...';
+                }
+                
+                this.currentDoc = this.updateDocument(this.currentDoc.id, { title: title || 'Untitled Document' });
+                this.renderDocumentList();
+            }
+
+            // Update document text
+            updateText(text) {
+                if (!this.currentDoc) return;
+                
+                this.currentDoc = this.updateDocument(this.currentDoc.id, { text });
+                this.updateStats(text);
+                
+                // Auto-update title if it's still default and we have text
+                if (this.currentDoc.title === 'Untitled Document' && text.trim()) {
+                    const autoTitle = text.split(' ').slice(0, 3).join(' ');
+                    if (autoTitle) {
+                        this.updateTitle(autoTitle);
+                        // Update title input field
+                        const titleInput = document.querySelector('.document-title-input');
+                        if (titleInput) titleInput.value = autoTitle;
+                    }
+                }
+            }
+
+            // Update statistics in footer
+            updateStats(text) {
+                const chars = text.length;
+                const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+                const lines = text.split('\n').length;
+
+                document.getElementById('charCount').textContent = chars.toLocaleString();
+                document.getElementById('wordCount').textContent = words.toLocaleString();
+                document.getElementById('lineCount').textContent = lines.toLocaleString();
+            }
+        }
+
+        // Global functions
+        function createNewDocument() {
+            const doc = docManager.createDocument();
+            docManager.loadDocument(doc.id);
+            docManager.renderDocumentList();
+        }
+
+        // Initialize the app
+        const docManager = new DocumentManager();
+    </script>
+</body>
+</html>
