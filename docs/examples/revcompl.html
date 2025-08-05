@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reverse Complement DNA</title>
+    <style>
+        :root {
+            --antiflash-white: #F0F1F1;
+            --pine-green: #097E74;
+            --apple-green: #B6BE00;
+            --charcoal: #2F3D46;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--antiflash-white);
+            color: var(--charcoal);
+        }
+
+        /* Top bar */
+        .header {
+            background: var(--pine-green);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Input section */
+        .input-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .input-section h2 {
+            margin-bottom: 10px;
+            color: var(--charcoal);
+            font-size: 18px;
+        }
+
+        #dnaInput {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+            background-color: white;
+        }
+
+        #dnaInput:focus {
+            outline: none;
+            border-color: var(--pine-green);
+        }
+
+        .process-btn {
+            margin-top: 15px;
+            padding: 12px 24px;
+            background: var(--pine-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .process-btn:hover {
+            background: #0a8a7f;
+        }
+
+        /* Output section */
+        .output-section {
+            display: flex;
+            gap: 20px;
+            height: 400px;
+        }
+
+        /* Sequence list */
+        .sequence-list {
+            flex: 0 0 300px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .sequence-list h3 {
+            margin-bottom: 15px;
+            color: var(--charcoal);
+            font-size: 16px;
+        }
+
+        .sequence-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: var(--antiflash-white);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            word-break: break-all;
+        }
+
+        .sequence-item:hover {
+            background: #e8e9e9;
+            border-color: var(--apple-green);
+        }
+
+        .sequence-item.selected {
+            background: #f0f7e6;
+            border-color: var(--apple-green);
+        }
+
+        .sequence-name {
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 4px;
+        }
+
+        .sequence-preview {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Main output */
+        .main-output {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--antiflash-white);
+        }
+
+        .output-title {
+            font-size: 18px;
+            color: var(--charcoal);
+            margin-bottom: 5px;
+        }
+
+        .output-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .output-content {
+            flex: 1;
+            background: var(--antiflash-white);
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-y: auto;
+            word-break: break-all;
+            line-height: 1.4;
+            color: var(--charcoal);
+        }
+
+        .placeholder {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        /* Error message */
+        .error {
+            background: #fee;
+            color: #d32f2f;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 4px solid #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DNA Reverse Complement</h1>
+    </div>
+
+    <div class="container">
+        <!-- Input Section -->
+        <div class="input-section">
+            <h2>Input DNA Sequence(s)</h2>
+            <textarea id="dnaInput" placeholder="Paste your DNA sequence here...
+Can be:
+- Raw DNA sequence (ATCG...)
+- FASTA format (>header followed by sequence)
+- Multi-FASTA format (multiple sequences with headers)
+
+IUPAC degenerate bases are supported (R, Y, S, W, K, M, B, D, H, V, N)"></textarea>
+            <button class="process-btn" onclick="processSequences()">Process Sequences</button>
+            <div id="errorMessage"></div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-section">
+            <!-- Sequence List -->
+            <div class="sequence-list">
+                <h3>Sequences</h3>
+                <div id="sequenceList">
+                    <div class="placeholder">No sequences processed yet</div>
+                </div>
+            </div>
+
+            <!-- Main Output -->
+            <div class="main-output">
+                <div class="output-header">
+                    <div class="output-title" id="outputTitle">Select a sequence</div>
+                    <div class="output-info" id="outputInfo"></div>
+                </div>
+                <div class="output-content" id="outputContent">
+                    <div class="placeholder">Process sequences and select one from the list to view its reverse complement</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IUPAC DNA complement mapping
+        const complementMap = {
+            'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G',
+            'R': 'Y', 'Y': 'R', 'S': 'S', 'W': 'W',
+            'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
+            'H': 'D', 'V': 'B', 'N': 'N'
+        };
+
+        let sequences = [];
+        let selectedIndex = -1;
+
+        /**
+         * Get the reverse complement of a DNA sequence
+         * Handles IUPAC degenerate bases
+         */
+        function reverseComplement(sequence) {
+            return sequence
+                .toUpperCase()
+                .split('')
+                .reverse()
+                .map(base => complementMap[base] || base)
+                .join('');
+        }
+
+        /**
+         * Parse input text to extract sequences
+         * Handles raw DNA, FASTA, and multi-FASTA formats
+         */
+        function parseSequences(input) {
+            const lines = input.trim().split('\n');
+            const sequences = [];
+            
+            // Check if input contains FASTA headers
+            const hasFastaHeaders = lines.some(line => line.startsWith('>'));
+            
+            if (hasFastaHeaders) {
+                // Parse FASTA format
+                let currentHeader = '';
+                let currentSequence = '';
+                
+                for (const line of lines) {
+                    if (line.startsWith('>')) {
+                        // Save previous sequence if exists
+                        if (currentHeader && currentSequence) {
+                            sequences.push({
+                                name: currentHeader.substring(1).trim() || `Sequence ${sequences.length + 1}`,
+                                sequence: currentSequence.replace(/\s/g, '').toUpperCase()
+                            });
+                        }
+                        // Start new sequence
+                        currentHeader = line;
+                        currentSequence = '';
+                    } else {
+                        currentSequence += line.trim();
+                    }
+                }
+                
+                // Add last sequence
+                if (currentHeader && currentSequence) {
+                    sequences.push({
+                        name: currentHeader.substring(1).trim() || `Sequence ${sequences.length + 1}`,
+                        sequence: currentSequence.replace(/\s/g, '').toUpperCase()
+                    });
+                }
+            } else {
+                // Raw DNA sequence - remove all whitespace and treat as single sequence
+                const cleanSequence = input.replace(/\s/g, '').toUpperCase();
+                if (cleanSequence) {
+                    sequences.push({
+                        name: 'Sequence 1',
+                        sequence: cleanSequence
+                    });
+                }
+            }
+            
+            return sequences;
+        }
+
+        /**
+         * Validate DNA sequence characters
+         */
+        function validateSequence(sequence) {
+            const validChars = /^[ATGCRYSW KMBD HVNX-]+$/i;
+            return validChars.test(sequence);
+        }
+
+        /**
+         * Process input sequences and populate the interface
+         */
+        function processSequences() {
+            const input = document.getElementById('dnaInput').value;
+            const errorDiv = document.getElementById('errorMessage');
+            
+            // Clear previous errors
+            errorDiv.innerHTML = '';
+            
+            if (!input.trim()) {
+                showError('Please enter a DNA sequence');
+                return;
+            }
+            
+            try {
+                // Parse sequences
+                sequences = parseSequences(input);
+                
+                if (sequences.length === 0) {
+                    showError('No valid sequences found');
+                    return;
+                }
+                
+                // Validate sequences
+                for (let i = 0; i < sequences.length; i++) {
+                    if (!validateSequence(sequences[i].sequence)) {
+                        showError(`Invalid characters in sequence "${sequences[i].name}". Only IUPAC DNA codes are allowed.`);
+                        return;
+                    }
+                    
+                    // Calculate reverse complement
+                    sequences[i].reverseComplement = reverseComplement(sequences[i].sequence);
+                }
+                
+                // Update UI
+                updateSequenceList();
+                selectSequence(0); // Select first sequence by default
+                
+            } catch (error) {
+                showError('Error processing sequences: ' + error.message);
+            }
+        }
+
+        /**
+         * Update the sequence list in the left panel
+         */
+        function updateSequenceList() {
+            const listDiv = document.getElementById('sequenceList');
+            
+            if (sequences.length === 0) {
+                listDiv.innerHTML = '<div class="placeholder">No sequences processed yet</div>';
+                return;
+            }
+            
+            listDiv.innerHTML = sequences.map((seq, index) => `
+                <div class="sequence-item" onclick="selectSequence(${index})">
+                    <div class="sequence-name">${seq.name}</div>
+                    <div class="sequence-preview">${seq.sequence.substring(0, 30)}${seq.sequence.length > 30 ? '...' : ''}</div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Select a sequence and display its reverse complement
+         */
+        function selectSequence(index) {
+            if (index < 0 || index >= sequences.length) return;
+            
+            selectedIndex = index;
+            const seq = sequences[index];
+            
+            // Update selection styling
+            document.querySelectorAll('.sequence-item').forEach((item, i) => {
+                item.classList.toggle('selected', i === index);
+            });
+            
+            // Update output panel
+            document.getElementById('outputTitle').textContent = seq.name;
+            document.getElementById('outputInfo').textContent = 
+                `Original: ${seq.sequence.length} bp | Reverse complement: ${seq.reverseComplement.length} bp`;
+            
+            // Format output with line breaks every 80 characters
+            const formattedSequence = seq.reverseComplement.match(/.{1,80}/g)?.join('\n') || seq.reverseComplement;
+            document.getElementById('outputContent').textContent = formattedSequence;
+        }
+
+        /**
+         * Show error message
+         */
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Example sequence on page load
+        window.onload = function() {
+            document.getElementById('dnaInput').value = `>Example sequence 1
+ATGCGATCGTAGCTAGCTAG
+>Example sequence 2
+GGCATGCRATYCWSKM`;
+        };
+    </script>
+</body>
+</html>

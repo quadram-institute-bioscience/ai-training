@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Count</title>
     <style>
+        :root {
+            --antiflash-white: #F0F1F1;
+            --pine-green: #097E74;
+            --apple-green: #B6BE00;
+            --charcoal: #2F3D46;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,15 +21,16 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             height: 100vh;
-            background: #f5f5f5;
+            background: var(--antiflash-white);
             display: grid;
             grid-template-columns: 280px 1fr;
             grid-template-rows: 1fr auto;
+            color: var(--charcoal);
         }
 
         /* Left Sidebar */
         .sidebar {
-            background: #e8e8e8;
+            background: #e8eaea;
             border-right: 1px solid #d1d1d1;
             grid-row: 1 / 3;
             display: flex;
@@ -32,29 +40,30 @@
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid #d1d1d1;
-            background: #ddd;
+            background: #dde0e0;
         }
 
         .sidebar-header h2 {
             font-size: 18px;
             font-weight: 600;
-            color: #333;
+            color: var(--pine-green);
         }
 
         .new-document-btn {
             width: 100%;
             padding: 8px 16px;
             margin-top: 12px;
-            background: #007aff;
+            background: var(--pine-green);
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            transition: background 0.2s;
         }
 
         .new-document-btn:hover {
-            background: #0056cc;
+            background: #075d56;
         }
 
         .document-list {
@@ -74,8 +83,8 @@
         }
 
         .document-item.active {
-            background: #007aff;
-            color: white;
+            background: var(--apple-green);
+            color: var(--charcoal);
         }
 
         .document-title {
@@ -97,13 +106,18 @@
         }
 
         .delete-btn {
-            background: #ff3b30;
+            background: #E36f6f;
             color: white;
             border: none;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 11px;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #b71c1c;
         }
 
         /* Main Panel */
@@ -122,6 +136,7 @@
             outline: none;
             background: transparent;
             resize: none;
+            color: var(--pine-green);
         }
 
         .document-text {
@@ -135,6 +150,7 @@
             resize: none;
             white-space: pre-wrap;
             word-wrap: break-word;
+            color: var(--charcoal);
         }
 
         .placeholder {
@@ -150,6 +166,7 @@
         .placeholder h3 {
             font-size: 24px;
             margin-bottom: 8px;
+            color: var(--pine-green);
         }
 
         /* Footer */
@@ -159,14 +176,14 @@
             right: 0;
             left: 280px;
             height: 60px;
-            background: rgba(248, 248, 248, 0.95);
+            background: rgba(240, 241, 241, 0.95);
             backdrop-filter: blur(10px);
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #d1d1d1;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 14px;
-            color: #666;
+            color: var(--charcoal);
             gap: 24px;
         }
 
@@ -180,12 +197,13 @@
         .stat-value {
             font-weight: 600;
             font-size: 16px;
-            color: #333;
+            color: var(--pine-green);
         }
 
         .stat-label {
             font-size: 12px;
             opacity: 0.7;
+            color: var(--charcoal);
         }
 
         /* Responsive */
@@ -430,7 +448,11 @@
             // Update statistics in footer
             updateStats(text) {
                 const chars = text.length;
-                const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+                
+                // Strip non-alphanumeric characters, then count words
+                const alphanumericOnly = text.replace(/[^a-zA-Z0-9\s]/g, ' ');
+                const words = alphanumericOnly.trim() ? alphanumericOnly.trim().split(/\s+/).length : 0;
+                
                 const lines = text.split('\n').length;
 
                 document.getElementById('charCount').textContent = chars.toLocaleString();
