@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeqFu Stats</title>
+    <style>
+        :root {
+            --antiflash-white: #F0F1F1;
+            --apple-green: #B6BE00;
+            --pine-green: #097E74;
+            --charcoal: #2F3D46;
+            --charcoal-light: #3a4751;
+            --charcoal-lighter: #4a5761;
+            --charcoal-dark: #1a2329;
+            --orange: #FF8C42;
+            --blue: #4A90E2;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--charcoal);
+            color: #e0e0e0;
+        }
+        
+        #titleBar {
+            height: 50px;
+            background: var(--pine-green);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        
+        #titleBar h1 {
+            color: var(--antiflash-white);
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .subtitle {
+            margin-left: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        #mainContent {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #dropZone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--charcoal-light);
+            margin: 20px;
+            border: 3px dashed var(--charcoal-lighter);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #dropZone.has-output {
+            justify-content: flex-start;
+            align-items: stretch;
+            padding: 0;
+            background: var(--charcoal);
+            border: none;
+            margin: 0;
+        }
+        
+        #dropZone.dragover {
+            background: var(--charcoal-lighter);
+            border-color: var(--apple-green);
+            box-shadow: 0 0 20px rgba(182, 190, 0, 0.2);
+        }
+        
+        #dropZone.processing {
+            border-color: #f4bf75;
+        }
+        
+        #dropZone.error {
+            border-color: #ac4142;
+            background: rgba(172, 65, 66, 0.1);
+        }
+        
+        .drop-message {
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        .drop-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        
+        .drop-text {
+            font-size: 20px;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+        
+        .drop-subtext {
+            font-size: 14px;
+            color: #707070;
+        }
+        
+        #output {
+            display: none;
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            background: var(--charcoal-dark);
+            width: 100%;
+        }
+        
+        #dropZone.has-output #output {
+            margin: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--charcoal-lighter);
+        }
+        
+        #output.show {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--charcoal);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--charcoal-lighter);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--apple-green);
+            box-shadow: 0 0 10px rgba(182, 190, 0, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #707070;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--apple-green);
+        }
+        
+        .stat-unit {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-left: 5px;
+        }
+        
+        .section-title {
+            color: var(--apple-green);
+            font-size: 16px;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--charcoal-lighter);
+            padding-bottom: 8px;
+        }
+        
+        .metrics-table {
+            background: var(--charcoal);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--charcoal-lighter);
+        }
+        
+        .metrics-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 2fr;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--charcoal-lighter);
+        }
+        
+        .metrics-row:last-child {
+            border-bottom: none;
+        }
+        
+        .metrics-header {
+            font-weight: 600;
+            color: var(--apple-green);
+            border-bottom: 2px solid var(--apple-green);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .metric-name {
+            color: #a0a0a0;
+        }
+        
+        .metric-value {
+            color: #e0e0e0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        
+        .metric-index {
+            color: #707070;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        
+        #statusBar {
+            height: 40px;
+            background: var(--charcoal-dark);
+            border-top: 1px solid var(--charcoal-lighter);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 13px;
+            color: #a0a0a0;
+        }
+        
+        .status-item {
+            margin-right: 30px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-label {
+            color: #707070;
+            margin-right: 8px;
+        }
+        
+        .status-value {
+            color: var(--apple-green);
+            font-weight: 500;
+        }
+        
+        #progressBar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--apple-green), var(--pine-green));
+            transition: width 0.3s ease;
+        }
+        
+        .error-message {
+            background: rgba(172, 65, 66, 0.2);
+            border: 1px solid #ac4142;
+            color: #f0a0a0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .processing-message {
+            color: #f4bf75;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .reset-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--pine-green);
+            color: var(--antiflash-white);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+            z-index: 10;
+        }
+        
+        .reset-button:hover {
+            background: var(--apple-green);
+        }
+        
+        .length-distribution {
+            background: var(--charcoal);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--charcoal-lighter);
+            margin-top: 20px;
+        }
+        
+        .histogram-container {
+            margin-top: 15px;
+            padding: 10px;
+            background: var(--charcoal-dark);
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .histogram-bar {
+            display: inline-block;
+            width: 30px;
+            margin: 0 2px;
+            background: var(--apple-green);
+            vertical-align: bottom;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+        
+        .histogram-bar:hover {
+            opacity: 1;
+            background: var(--orange);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Scrollbar styling */
+        #output::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #output::-webkit-scrollbar-track {
+            background: var(--charcoal-dark);
+            border-radius: 4px;
+        }
+        
+        #output::-webkit-scrollbar-thumb {
+            background: var(--charcoal-lighter);
+            border-radius: 4px;
+        }
+        
+        #output::-webkit-scrollbar-thumb:hover {
+            background: var(--apple-green);
+        }
+        
+        .format-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+        
+        .format-fasta {
+            background: var(--blue);
+            color: white;
+        }
+        
+        .format-fastq {
+            background: var(--orange);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="titleBar">
+        <h1>SeqFu Stats <span class="subtitle">FASTA/FASTQ Statistics</span></h1>
+    </div>
+    
+    <div id="mainContent">
+        <div id="dropZone">
+            <div id="progressBar"></div>
+            <div class="drop-message" id="dropMessage">
+                <div class="drop-icon">🧬</div>
+                <div class="drop-text">Drop a sequence file here</div>
+                <div class="drop-subtext">FASTA, FASTQ, or gzipped versions (.fa, .fasta, .fq, .fastq, .gz)</div>
+            </div>
+            <div id="output">
+                <button class="reset-button" onclick="resetView()">Load New File</button>
+                
+                <div id="fileInfo"></div>
+                
+                <div class="stats-grid" id="mainStats"></div>
+                
+                <div class="section-title">Assembly Metrics</div>
+                <div class="metrics-table">
+                    <div class="metrics-row metrics-header">
+                        <div>Metric</div>
+                        <div>Length (bp)</div>
+                        <div>Sequence Index</div>
+                    </div>
+                    <div id="assemblyMetrics"></div>
+                </div>
+                
+                <div class="section-title">Length Distribution</div>
+                <div class="length-distribution">
+                    <div id="lengthStats"></div>
+                    <div class="histogram-container" id="histogram"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="statusBar">
+        <div class="status-item">
+            <span class="status-label">File:</span>
+            <span class="status-value" id="fileName">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Size:</span>
+            <span class="status-value" id="fileSize">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Format:</span>
+            <span class="status-value" id="fileFormat">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Sequences:</span>
+            <span class="status-value" id="seqCount">-</span>
+        </div>
+        <div class="status-item" style="margin-left: auto;">
+            <button onclick="showDebugInfo()" style="background: var(--charcoal-lighter); color: var(--apple-green); border: 1px solid var(--apple-green); padding: 4px 8px; border-radius: 3px; cursor: pointer;">Debug Info</button>
+        </div>
+    </div>
+
+    <script>
+        // Debug info storage
+        let debugInfo = {
+            decompression: {},
+            parsing: {},
+            timing: {}
+        };
+        
+        function showDebugInfo() {
+            console.log('=== DEBUG INFO ===');
+            console.log('Decompression:', debugInfo.decompression);
+            console.log('Parsing:', debugInfo.parsing);
+            console.log('Timing:', debugInfo.timing);
+            
+            const info = `
+DEBUG INFORMATION:
+
+Decompression:
+  Original size: ${formatFileSize(debugInfo.decompression.originalSize || 0)}
+  Decompressed size: ${formatFileSize(debugInfo.decompression.decompressedSize || 0)}
+  Blob size: ${formatFileSize(debugInfo.decompression.blobSize || 0)}
+  Chunks: ${debugInfo.decompression.chunkCount || 0}
+  Time: ${debugInfo.decompression.decompressionTime || 0}ms
+
+Parsing:
+  Chunks processed: ${debugInfo.parsing.chunksProcessed || 0}
+  Bytes processed: ${formatFileSize(debugInfo.parsing.totalBytesProcessed || 0)}
+  First records: ${JSON.stringify(debugInfo.parsing.firstRecords || [], null, 2)}
+`;
+            alert(info);
+        }
+        
+        // Utility function to format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Format large numbers with commas
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString();
+        }
+        
+        // Memory-efficient streaming FASTA/FASTQ parser using FileReader API for large files
+        async function parseFileWithFileReader(file) {
+            return new Promise((resolve, reject) => {
+                const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+                let offset = 0;
+                let buffer = '';
+                let currentHeader = null;
+                let currentSeq = '';
+                let inQuality = false;
+                let qualityBuffer = '';
+                let fileFormat = null;
+                let sequenceCount = 0;
+                let fastqState = 0; // 0=expect header, 1=expect seq, 2=expect +, 3=expect qual
+                
+                // Statistics
+                const lengthCounts = {};
+                let totalLength = 0;
+                let totalSequences = 0;
+                let totalGC = 0;
+                let totalQualifiedBases = 0;
+                let minLen = Infinity;
+                let maxLen = 0;
+                
+                const reader = new FileReader();
+                
+                function processRecord(header, sequence) {
+                    if (!header || !sequence) return;
+                    
+                    sequenceCount++;
+                    totalSequences++;
+                    
+                    // Debug first few records
+                    if (totalSequences <= 3) {
+                        if (!debugInfo.parsing) debugInfo.parsing = {};
+                        if (!debugInfo.parsing.firstRecords) debugInfo.parsing.firstRecords = [];
+                        debugInfo.parsing.firstRecords.push({
+                            num: totalSequences,
+                            header: header.substring(0, 50),
+                            seqLen: sequence.length
+                        });
+                    }
+                    const seqLength = sequence.length;
+                    totalLength += seqLength;
+                    
+                    // Update length counts
+                    lengthCounts[seqLength] = (lengthCounts[seqLength] || 0) + 1;
+                    
+                    // Update min/max
+                    minLen = Math.min(minLen, seqLength);
+                    maxLen = Math.max(maxLen, seqLength);
+                    
+                    // Count GC and qualified bases
+                    for (let i = 0; i < sequence.length; i++) {
+                        const base = sequence[i].toUpperCase();
+                        if (base === 'G' || base === 'C') {
+                            totalGC++;
+                        }
+                        if (base === 'A' || base === 'T' || base === 'G' || base === 'C') {
+                            totalQualifiedBases++;
+                        }
+                    }
+                    
+                    // Update progress
+                    if (sequenceCount % 100 === 0) {
+                        const progress = Math.min(95, (offset / file.size) * 100);
+                        document.getElementById('progressBar').style.width = progress + '%';
+                    }
+                }
+                
+                function processChunk(text) {
+                    if (!debugInfo.parsing) debugInfo.parsing = {};
+                    debugInfo.parsing.chunksProcessed = (debugInfo.parsing.chunksProcessed || 0) + 1;
+                    debugInfo.parsing.totalBytesProcessed = (debugInfo.parsing.totalBytesProcessed || 0) + text.length;
+                    
+                    if (debugInfo.parsing.chunksProcessed <= 2) {
+                        console.log(`Processing chunk ${debugInfo.parsing.chunksProcessed}, size: ${text.length} bytes`);
+                    }
+                    
+                    buffer += text;
+                    const lines = buffer.split('\n');
+                    
+                    // Keep last incomplete line in buffer
+                    buffer = lines.pop() || '';
+                    
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        
+                        // For FASTA, skip empty lines
+                        if (!trimmedLine && fileFormat === 'FASTA') continue;
+                        
+                        // FASTQ: Use strict 4-line state machine
+                        if (fileFormat === 'FASTQ') {
+                            switch (fastqState) {
+                                case 0: // Expecting @header
+                                    if (trimmedLine && trimmedLine[0] === '@') {
+                                        currentHeader = trimmedLine;
+                                        currentSeq = '';
+                                        qualityBuffer = '';
+                                        fastqState = 1;
+                                    }
+                                    continue;
+                                case 1: // Expecting sequence
+                                    currentSeq = trimmedLine || ''; // Can be empty
+                                    fastqState = 2;
+                                    continue;
+                                case 2: // Expecting +
+                                    if (line.trim().startsWith('+')) {
+                                        fastqState = 3;
+                                    }
+                                    continue;
+                                case 3: // Expecting quality
+                                    qualityBuffer = trimmedLine || ''; // Can be empty
+                                    processRecord(currentHeader, currentSeq);
+                                    currentHeader = null;
+                                    currentSeq = '';
+                                    qualityBuffer = '';
+                                    fastqState = 0;
+                                    continue;
+                            }
+                        }
+                        
+                        // Detect format from first line
+                        if (fileFormat === null && trimmedLine) {
+                            const firstChar = trimmedLine[0];
+                            if (firstChar === '>') {
+                                fileFormat = 'FASTA';
+                                currentHeader = trimmedLine;
+                                currentSeq = '';
+                            } else if (firstChar === '@') {
+                                fileFormat = 'FASTQ';
+                                currentHeader = trimmedLine;
+                                currentSeq = '';
+                                fastqState = 1; // Next line is sequence
+                            }
+                            continue;
+                        }
+                        
+                        // FASTA parsing
+                        if (fileFormat === 'FASTA') {
+                            if (!trimmedLine) continue;
+                            
+                            if (trimmedLine[0] === '>') {
+                                // New header - process previous sequence
+                                if (currentHeader && currentSeq) {
+                                    processRecord(currentHeader, currentSeq);
+                                }
+                                currentHeader = trimmedLine;
+                                currentSeq = '';
+                            } else {
+                                // Multi-line sequences allowed in FASTA
+                                currentSeq += trimmedLine;
+                            }
+                        }
+                    }
+                }
+                
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                
+                reader.onload = (e) => {
+                    try {
+                        processChunk(e.target.result);
+                        
+                        offset += CHUNK_SIZE;
+                        if (offset < file.size) {
+                            // Read next chunk
+                            const blob = file.slice(offset, Math.min(offset + CHUNK_SIZE, file.size));
+                            reader.readAsText(blob);
+                        } else {
+                            // Process final buffer
+                            if (buffer) {
+                                const lines = buffer.split('\n');
+                                for (const line of lines) {
+                                    const trimmedLine = line.trim();
+                                    if (!trimmedLine) continue;
+                                    
+                                    // Handle remaining lines
+                                    if (inQuality) {
+                                        qualityBuffer += trimmedLine;
+                                    } else if (trimmedLine[0] === '+' && fileFormat === 'FASTQ' && currentSeq) {
+                                        inQuality = true;
+                                        qualityBuffer = '';
+                                    } else if (currentHeader && !inQuality && trimmedLine[0] !== '>') {
+                                        currentSeq += trimmedLine;
+                                    }
+                                }
+                            }
+                            
+                            // Process last sequence
+                            if (currentHeader && currentSeq) {
+                                processRecord(currentHeader, currentSeq);
+                            }
+                            
+                            // Calculate final statistics
+                            const avgLength = totalLength / totalSequences;
+                            const gcContent = (totalGC / totalLength) * 100;
+                            const nMetrics = calculateNMetrics(lengthCounts, totalLength);
+                            
+                            document.getElementById('progressBar').style.width = '100%';
+                            
+                            resolve({
+                                totalSequences,
+                                totalLength,
+                                avgLength,
+                                gcContent,
+                                minLen: minLen === Infinity ? 0 : minLen,
+                                maxLen,
+                                lengthCounts,
+                                fileFormat: fileFormat || 'FASTA',
+                                totalQualifiedBases,
+                                ...nMetrics
+                            });
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                // Start reading first chunk
+                const firstChunkSize = Math.min(CHUNK_SIZE, file.size);
+                const blob = file.slice(0, firstChunkSize);
+                console.log(`Starting to read file, first chunk: ${formatFileSize(firstChunkSize)}`);
+                reader.readAsText(blob);
+            });
+        }
+        
+        // Calculate N50, N75, N90 with memory-efficient approach
+        function calculateNMetrics(lengthCounts, totalLength) {
+            // Sort lengths in descending order
+            const sortedLengths = Object.entries(lengthCounts)
+                .map(([len, count]) => [parseInt(len), count])
+                .sort((a, b) => b[0] - a[0]);
+            
+            const metrics = {};
+            const thresholds = [50, 75, 90];
+            
+            for (const threshold of thresholds) {
+                const targetSum = totalLength * (threshold / 100);
+                let currentSum = 0;
+                let seqIndex = 0;
+                
+                for (const [length, count] of sortedLengths) {
+                    for (let i = 0; i < count; i++) {
+                        currentSum += length;
+                        seqIndex++;
+                        if (currentSum >= targetSum) {
+                            metrics[`N${threshold}`] = length;
+                            metrics[`I${threshold}`] = seqIndex;
+                            break;
+                        }
+                    }
+                    if (metrics[`N${threshold}`]) break;
+                }
+            }
+            
+            return metrics;
+        }
+        
+        // Process sequence file
+        async function processFile(file) {
+            const isGzipped = file.name.toLowerCase().endsWith('.gz');
+            
+            // For gzipped files, try to decompress first
+            if (isGzipped) {
+                try {
+                    const startTime = Date.now();
+                    debugInfo.decompression = {
+                        originalSize: file.size,
+                        fileName: file.name
+                    };
+                    
+                    console.log('Starting decompression of:', file.name, 'Size:', formatFileSize(file.size));
+                    
+                    const stream = file.stream();
+                    const decompressor = new DecompressionStream('gzip');
+                    let decompressedStream;
+                    
+                    try {
+                        decompressedStream = stream.pipeThrough(decompressor);
+                    } catch (error) {
+                        console.error('Failed to create decompression stream:', error);
+                        throw error;
+                    }
+                    
+                    const reader = decompressedStream.getReader();
+                    
+                    // Collect ALL chunks without limit
+                    const chunks = [];
+                    let totalSize = 0;
+                    let chunkCount = 0;
+                    
+                    console.log('Reading decompressed chunks...');
+                    let streamError = null;
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                console.log('Decompression stream complete');
+                                break;
+                            }
+                            
+                            if (value && value.byteLength > 0) {
+                                chunks.push(value);
+                                totalSize += value.byteLength;
+                                chunkCount++;
+                                
+                                // Log progress every 50 chunks
+                                if (chunkCount % 50 === 0) {
+                                    console.log(`Progress: ${chunkCount} chunks, ${formatFileSize(totalSize)} decompressed`);
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        streamError = error;
+                        // Handle "Junk found after end of compressed data" - browser being too strict
+                        console.warn('Stream read error:', error.message);
+                        if (error.message.includes('Junk found') && chunks.length > 0) {
+                            console.log(`Got ${chunks.length} chunks before error - using partial data`);
+                            debugInfo.decompression.partialDecompression = true;
+                            debugInfo.decompression.streamError = error.message;
+                        } else {
+                            throw error;
+                        }
+                    }
+                    
+                    debugInfo.decompression.decompressedSize = totalSize;
+                    debugInfo.decompression.chunkCount = chunkCount;
+                    debugInfo.decompression.decompressionTime = Date.now() - startTime;
+                    
+                    console.log(`Decompression complete: ${formatFileSize(totalSize)} in ${chunkCount} chunks, took ${Date.now() - startTime}ms`);
+                    
+                    // Create blob from ALL chunks
+                    const blob = new Blob(chunks, { type: 'text/plain' });
+                    
+                    debugInfo.decompression.blobSize = blob.size;
+                    console.log('Created blob, size:', formatFileSize(blob.size));
+                    
+                    if (blob.size !== totalSize) {
+                        console.error('CRITICAL: Blob size mismatch! Chunks total:', totalSize, 'Blob size:', blob.size);
+                        debugInfo.decompression.sizeMismatch = true;
+                    }
+                    
+                    return await parseFileWithFileReader(blob);
+                } catch (error) {
+                    console.error('Gzip decompression failed:', error);
+                    debugInfo.decompression.failed = true;
+                    debugInfo.decompression.error = error.message;
+                    // Don't fall back to parsing compressed data as text - that gives bogus results
+                    throw new Error(`Failed to decompress gzip file: ${error.message}`);
+                }
+            } else {
+                // Process plain text file
+                return await parseFileWithFileReader(file);
+            }
+        }
+        
+        // Display results
+        function displayResults(stats) {
+            // File info
+            document.getElementById('fileInfo').innerHTML = `
+                <span class="format-badge format-${stats.fileFormat.toLowerCase()}">${stats.fileFormat}</span>
+            `;
+            
+            // Main statistics grid
+            document.getElementById('mainStats').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Sequences</div>
+                    <div class="stat-value">${formatNumber(stats.totalSequences)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Length</div>
+                    <div class="stat-value">${formatNumber(stats.totalLength)}<span class="stat-unit">bp</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Length</div>
+                    <div class="stat-value">${formatNumber(stats.avgLength)}<span class="stat-unit">bp</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">GC Content</div>
+                    <div class="stat-value">${stats.gcContent.toFixed(2)}<span class="stat-unit">%</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Minimum Length</div>
+                    <div class="stat-value">${formatNumber(stats.minLen)}<span class="stat-unit">bp</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Maximum Length</div>
+                    <div class="stat-value">${formatNumber(stats.maxLen)}<span class="stat-unit">bp</span></div>
+                </div>
+            `;
+            
+            // Assembly metrics table
+            document.getElementById('assemblyMetrics').innerHTML = `
+                <div class="metrics-row">
+                    <div class="metric-name">N50</div>
+                    <div class="metric-value">${formatNumber(stats.N50 || 0)} bp</div>
+                    <div class="metric-index">I50: ${formatNumber(stats.I50 || 0)}</div>
+                </div>
+                <div class="metrics-row">
+                    <div class="metric-name">N75</div>
+                    <div class="metric-value">${formatNumber(stats.N75 || 0)} bp</div>
+                    <div class="metric-index">I75: ${formatNumber(stats.I75 || 0)}</div>
+                </div>
+                <div class="metrics-row">
+                    <div class="metric-name">N90</div>
+                    <div class="metric-value">${formatNumber(stats.N90 || 0)} bp</div>
+                    <div class="metric-index">I90: ${formatNumber(stats.I90 || 0)}</div>
+                </div>
+            `;
+            
+            // Length distribution summary
+            const lengths = Object.keys(stats.lengthCounts).map(Number).sort((a, b) => a - b);
+            const uniqueLengths = lengths.length;
+            document.getElementById('lengthStats').innerHTML = `
+                <div style="color: #a0a0a0; margin-bottom: 10px;">
+                    ${uniqueLengths} unique sequence lengths found
+                </div>
+            `;
+            
+            // Create simple histogram (if not too many unique lengths)
+            if (uniqueLengths <= 100) {
+                const maxCount = Math.max(...Object.values(stats.lengthCounts));
+                const histogramHTML = lengths.map(len => {
+                    const count = stats.lengthCounts[len];
+                    const height = (count / maxCount) * 100;
+                    return `<div class="histogram-bar" 
+                             style="height: ${height}px;" 
+                             title="Length: ${len} bp\nCount: ${count}"></div>`;
+                }).join('');
+                document.getElementById('histogram').innerHTML = histogramHTML;
+                document.getElementById('histogram').style.height = '120px';
+            } else {
+                document.getElementById('histogram').innerHTML = `
+                    <div style="color: #707070; text-align: center; padding: 20px;">
+                        Too many unique lengths to display histogram (${uniqueLengths} values)
+                    </div>
+                `;
+            }
+        }
+        
+        // Reset view
+        function resetView() {
+            const dropZone = document.getElementById('dropZone');
+            const output = document.getElementById('output');
+            const dropMessage = document.getElementById('dropMessage');
+            
+            dropZone.classList.remove('has-output', 'processing', 'error');
+            output.classList.remove('show');
+            
+            dropMessage.style.display = 'block';
+            dropMessage.innerHTML = `
+                <div class="drop-icon">🧬</div>
+                <div class="drop-text">Drop a sequence file here</div>
+                <div class="drop-subtext">FASTA, FASTQ, or gzipped versions (.fa, .fasta, .fq, .fastq, .gz)</div>
+            `;
+            
+            document.getElementById('fileName').textContent = '-';
+            document.getElementById('fileSize').textContent = '-';
+            document.getElementById('fileFormat').textContent = '-';
+            document.getElementById('seqCount').textContent = '-';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+        
+        // Handle file
+        async function handleFile(file) {
+            const dropZone = document.getElementById('dropZone');
+            const output = document.getElementById('output');
+            const dropMessage = document.getElementById('dropMessage');
+            
+            dropZone.classList.remove('error', 'has-output');
+            output.classList.remove('show');
+            document.getElementById('progressBar').style.width = '0%';
+            
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileFormat').textContent = 'Processing...';
+            document.getElementById('seqCount').textContent = 'Processing...';
+            
+            dropZone.classList.add('processing');
+            dropMessage.innerHTML = `
+                <div class="drop-icon">⚙️</div>
+                <div class="drop-text processing-message">Processing ${file.name}...</div>
+                <div class="drop-subtext">Analyzing sequences...</div>
+            `;
+            
+            try {
+                const stats = await processFile(file);
+                
+                document.getElementById('progressBar').style.width = '100%';
+                
+                displayResults(stats);
+                output.classList.add('show');
+                dropMessage.style.display = 'none';
+                
+                dropZone.classList.remove('processing');
+                dropZone.classList.add('has-output');
+                
+                // Update status bar
+                document.getElementById('fileFormat').textContent = stats.fileFormat;
+                document.getElementById('seqCount').textContent = formatNumber(stats.totalSequences);
+                
+            } catch (error) {
+                console.error('Error processing file:', error);
+                
+                dropZone.classList.remove('processing');
+                dropZone.classList.add('error');
+                dropMessage.innerHTML = `
+                    <div class="drop-icon">❌</div>
+                    <div class="drop-text">Error Processing File</div>
+                    <div class="error-message">${error.message}</div>
+                    <div class="drop-subtext">Please drop a valid FASTA or FASTQ file</div>
+                `;
+                
+                document.getElementById('fileFormat').textContent = 'Error';
+                document.getElementById('seqCount').textContent = 'Error';
+                document.getElementById('progressBar').style.width = '0%';
+            }
+        }
+        
+        // Set up drag and drop
+        const dropZone = document.getElementById('dropZone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!dropZone.classList.contains('has-output')) {
+                dropZone.classList.add('dragover');
+            }
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                await handleFile(files[0]);
+            }
+        });
+        
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.classList.contains('reset-button') || dropZone.classList.contains('has-output')) {
+                return;
+            }
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.fa,.fasta,.fq,.fastq,.gz';
+            input.onchange = async (e) => {
+                if (e.target.files.length > 0) {
+                    await handleFile(e.target.files[0]);
+                }
+            };
+            input.click();
+        });
+    </script>
+</body>
+</html>
