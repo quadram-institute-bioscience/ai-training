@@ -69,6 +69,16 @@
             overflow: hidden;
         }
         
+        /* When showing output, remove centering and use full width */
+        #dropZone.has-output {
+            justify-content: flex-start;
+            align-items: stretch;
+            padding: 0;
+            background: var(--charcoal);
+            border: none;
+            margin: 0;
+        }
+        
         #dropZone.dragover {
             background: var(--charcoal-lighter);
             border-color: var(--apple-green);
@@ -112,9 +122,13 @@
             padding: 20px;
             overflow: auto;
             background: var(--charcoal-dark);
-            margin: 20px;
             border-radius: 10px;
             border: 1px solid var(--charcoal-lighter);
+            width: 100%;
+        }
+        
+        #dropZone.has-output #output {
+            margin: 20px;
         }
         
         #output.show {
@@ -236,23 +250,47 @@
             50% { opacity: 0.5; }
         }
         
+        /* Reset button */
+        .reset-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--pine-green);
+            color: var(--antiflash-white);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+            z-index: 10;
+        }
+        
+        .reset-button:hover {
+            background: var(--apple-green);
+        }
+        
         /* Scrollbar styling for better visibility */
-        .lines-container::-webkit-scrollbar {
+        .lines-container::-webkit-scrollbar,
+        #output::-webkit-scrollbar {
             height: 8px;
             width: 8px;
         }
         
-        .lines-container::-webkit-scrollbar-track {
+        .lines-container::-webkit-scrollbar-track,
+        #output::-webkit-scrollbar-track {
             background: var(--charcoal-dark);
             border-radius: 4px;
         }
         
-        .lines-container::-webkit-scrollbar-thumb {
+        .lines-container::-webkit-scrollbar-thumb,
+        #output::-webkit-scrollbar-thumb {
             background: var(--charcoal-lighter);
             border-radius: 4px;
         }
         
-        .lines-container::-webkit-scrollbar-thumb:hover {
+        .lines-container::-webkit-scrollbar-thumb:hover,
+        #output::-webkit-scrollbar-thumb:hover {
             background: var(--apple-green);
         }
     </style>
@@ -271,6 +309,7 @@
                 <div class="drop-subtext">Text files or .gz compressed text files</div>
             </div>
             <div id="output">
+                <button class="reset-button" onclick="resetView()">Load New File</button>
                 <div class="output-section">
                     <div class="section-title">First 10 Lines</div>
                     <div class="lines-container" id="firstLines"></div>
@@ -484,6 +523,31 @@
             return div.innerHTML;
         }
 
+        // Reset view to allow new file
+        function resetView() {
+            const dropZone = document.getElementById('dropZone');
+            const output = document.getElementById('output');
+            const dropMessage = document.getElementById('dropMessage');
+            
+            // Remove all state classes
+            dropZone.classList.remove('has-output', 'processing', 'error');
+            output.classList.remove('show');
+            
+            // Reset drop message
+            dropMessage.style.display = 'block';
+            dropMessage.innerHTML = `
+                <div class="drop-icon">📄</div>
+                <div class="drop-text">Drop a file here</div>
+                <div class="drop-subtext">Text files or .gz compressed text files</div>
+            `;
+            
+            // Reset status bar
+            document.getElementById('fileName').textContent = '-';
+            document.getElementById('fileSize').textContent = '-';
+            document.getElementById('lineCount').textContent = '-';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+
         // Handle file drop
         async function handleFile(file) {
             const dropZone = document.getElementById('dropZone');
@@ -491,7 +555,7 @@
             const dropMessage = document.getElementById('dropMessage');
             
             // Reset UI
-            dropZone.classList.remove('error');
+            dropZone.classList.remove('error', 'has-output');
             output.classList.remove('show');
             document.getElementById('progressBar').style.width = '0%';
             
@@ -519,8 +583,9 @@
                 output.classList.add('show');
                 dropMessage.style.display = 'none';
                 
-                // Remove processing state
+                // Remove processing state and add output state
                 dropZone.classList.remove('processing');
+                dropZone.classList.add('has-output');
                 
             } catch (error) {
                 console.error('Error processing file:', error);
@@ -546,7 +611,9 @@
         
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropZone.classList.add('dragover');
+            if (!dropZone.classList.contains('has-output')) {
+                dropZone.classList.add('dragover');
+            }
         });
         
         dropZone.addEventListener('dragleave', (e) => {
@@ -564,8 +631,13 @@
             }
         });
         
-        // Allow clicking to select file as well
-        dropZone.addEventListener('click', () => {
+        // Allow clicking to select file as well (only when not showing output)
+        dropZone.addEventListener('click', (e) => {
+            // Don't trigger file selection if clicking the reset button or if output is shown
+            if (e.target.classList.contains('reset-button') || dropZone.classList.contains('has-output')) {
+                return;
+            }
+            
             const input = document.createElement('input');
             input.type = 'file';
             input.onchange = async (e) => {
