@@ -1,0 +1,277 @@
+---
+title: "Compositional Data Analysis of Microbiome Counts"
+author: "Alise Ponsero, Andrea Telatin"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## 📦 1. Load Required Libraries
+
+Load required libraries for microbiome data analysis and visualization
+
+```{r load-packages}
+library(ggplot2)        # Widely used package for data visualization
+library(broom)          # Converts statistical analysis objects into tidy tibbles
+library(knitr)          # Dynamic report generation; enables formatted tables and results in reports
+
+library(phyloseq)       # For organizing and analyzing microbiome census data
+library(microbiome)     # Additional utilities for microbiome data exploration and transformation
+library(vegan)          # Ecological diversity analysis and ordination methods
+
+#Other commonly used libraries:
+#library(tibble)         # Modern reimagining of data.frames (more readable printing and enhanced functionality)
+#library(dplyr)          # Grammar of data manipulation (filtering, selecting, grouping, summarizing)
+#library(compositions)   # Tools for compositional data analysis (e.g., CLR transformation)
+```
+
+---
+
+## 📄 2. Load Your Data
+
+This code block loads raw microbiome data from CSV files, including feature counts,
+taxonomy annotations, and sample metadata.
+It also defines a grouping variable (`Diet`) for downstream analysis.
+
+Here’s an updated and concise Markdown explanation describing the three input files:
+
+---
+
+###  Input Data Overview
+
+This section loads three key input files required for microbiome analysis:
+
+#### · Raw feature table (counts.csv)
+  A matrix of raw feature abundances. Rows represent OTUs or ASVs (e.g., `OTUNAME1`), and columns represent samples.
+  **Example format:**
+
+  ```
+  #NAME,Sample1,Sample2,Sample3...
+  OTUNAME1,10,5,0
+  OTUNAME2,3,8,1
+  ```
+
+#### · Experiment metadata (mapping.csv)
+  Metadata table describing experimental variables for each sample (rows = samples, columns = variables such as `Diet`, `Treatment`).
+  **Example format:**
+
+  ```
+  #NAME,Diet,Treatment
+  Sample1,Low,T
+  Sample2,Low,F
+  Sample3,High,T
+  ```
+
+#### · Taxonomy table (taxonomy.csv)
+  Taxonomic assignments for each OTU/ASV. Each row corresponds to a feature and includes hierarchical ranks (e.g., Domain, Phylum, Class, etc.).
+  **Example format:**
+
+  ```
+  #TAXONOMY,Domain,Phylum,Class,...
+  OTUNAME1,Bacteria,Firmicutes,Bacilli,...
+  OTUNAME2,Bacteria,Bacteroidetes,Bacteroidia,...
+  ```
+
+The `Diet` variable from the mapping file is extracted and set for grouping in downstream analyses.
+ 
+
+```{r read-data}
+# Read the raw counts
+counts_table <- read.csv("counts.csv", row.names = 1)
+
+# Read taxonomy
+taxon_table <- read.csv("taxonomy.csv", row.names = 1)
+
+# Read experimental mapping file
+mapping <- read.csv("mapping.csv", row.names = 1)
+
+# Set grouping variable
+variable <- "Diet"
+```
+
+---
+
+## 3. Create a Phyloseq Object
+
+To streamline downstream microbiome analysis, the raw count data, taxonomy annotations,
+and sample metadata are combined into a single `phyloseq` object. 
+This unified structure ensures compatibility across functions for filtering, 
+normalization, visualization, and statistical modeling.
+
+The code below constructs this object and also extracts a synchronized metadata 
+table to ensure all components (samples and taxa) are aligned for consistent analysis.
+
+```{r create-phyloseq}
+otu <- otu_table(as.matrix(counts_table), taxa_are_rows = TRUE)
+tax <- tax_table(as.matrix(taxon_table))
+sampledata <- sample_data(mapping)
+
+# This command synchronizes the tables, keeping only overlapping samples and taxa
+physeq <- phyloseq(otu, tax, sampledata)
+
+# Create a synchronized metadata object for all downstream analysis. This is crucial.
+physeq_meta <- as(sample_data(physeq), "data.frame")
+```
+
+---
+
+## 4. Classical Approach: Relative Abundance + Bray-Curtis
+
+This block performs ordination analysis on microbiome data using the 
+Bray-Curtis distance and PCoA (Principal Coordinates Analysis), 
+then plots the result, colored by a chosen variable (e.g. Diet).
+
+* Normalize OTU counts to relative abundances,
+* Compute ecological distances between samples,
+* Reduce the distances to 2D with PCoA,
+* Visualize the samples in a colored scatterplot.
+
+```{r classical-bray-pcoa}
+# Total Sum Scaling (TSS) normalization
+physeq_tss <- transform_sample_counts(physeq, function(x) x / sum(x))
+
+# Bray-Curtis distance (requires samples in rows, so we transpose the OTU table)
+bray_dist <- vegdist(t(as.matrix(otu_table(physeq_tss))), method = "bray")
+
+# PCoA
+ordination_bray <- cmdscale(bray_dist, k = 2, eig = TRUE)
+ordination_df <- as.data.frame(ordination_bray$points)
+ordination_df$Sample <- rownames(ordination_df)
+ordination_df <- merge(ordination_df, physeq_meta, by.x = "Sample", by.y = "row.names")
+
+# Plot
+ggplot(ordination_df, aes(x = V1, y = V2, color = .data[[variable]])) +
+  geom_point(size = 4) +
+  labs(
+    title = "PCoA using Bray-Curtis",
+    x = "PC1", y = "PC2", color = variable
+  ) +
+  theme_minimal()
+```
+
+---
+
+## 🆕 5. CoDA Approach: CLR + Aitchison Distance
+
+The Compositional Data Analysis (CoDA) approach starts by applying a 
+**Centered Log-Ratio (CLR)** transformation to the count data. 
+This transformation addresses the compositional nature of microbiome data by 
+expressing each taxon relative to the geometric mean of the sample, 
+making the data suitable for standard multivariate methods. 
+
+Once transformed, we compute the **Aitchison distance**, which is simply the 
+Euclidean distance on CLR-transformed data. This ensures that the distance 
+metric respects the properties of compositional data. 
+
+Finally, we perform **PCoA** and visualize the ordination, 
+just as we did with the Bray-Curtis method, but now in a statistically appropriate space.
+
+```{r clr-pcoa}
+# The microbiome::transform function correctly handles zeros by default.
+physeq_clr <- microbiome::transform(physeq, "clr")
+
+# Aitchison distance (Euclidean distance on CLR-transformed data)
+aitch_dist <- dist(t(as.matrix(otu_table(physeq_clr))), method = "euclidean")
+
+# PCoA
+ordination_aitch <- cmdscale(aitch_dist, k = 2, eig = TRUE)
+ordination_df2 <- as.data.frame(ordination_aitch$points)
+ordination_df2$Sample <- rownames(ordination_df2)
+ordination_df2 <- merge(ordination_df2, physeq_meta, by.x = "Sample", by.y = "row.names")
+
+# Plot
+ggplot(ordination_df2, aes(x = V1, y = V2, color = .data[[variable]])) +
+  geom_point(size = 4) +
+  labs(
+    title = "PCoA using Aitchison Distance (CLR)",
+    x = "PC1", y = "PC2", color = variable
+  ) +
+  theme_minimal()
+```
+
+---
+
+## 6. PERMANOVA (adonis2)
+
+In this step, we test whether the differences in microbial community composition 
+between groups (e.g., diet types) are statistically significant. 
+We use **PERMANOVA** (Permutational Multivariate Analysis of Variance), 
+implemented via the `adonis2` function from the vegan package. 
+
+This method partitions variation in a distance matrix according to one or more 
+variables from the metadata. 
+We run PERMANOVA twice: 
+
+* once using the _Bray-Curtis distances_ from the classical relative abundance approach, and 
+* once using the _Aitchison distances_ from the CoDA (CLR-transformed) approach. 
+
+The results tell us whether groupings based on the chosen variable (e.g., Diet) 
+explain a significant portion of the variance in community composition.
+
+```{r permanova, results='asis'}
+# Classical
+formula_bray <- as.formula(paste("bray_dist ~", variable))
+adonis_bray <- adonis2(formula_bray, data = physeq_meta)
+```
+
+#### PERMANOVA results for Bray-Curtis
+```{r}
+kable(tidy(adonis_bray), caption = "PERMANOVA on Bray-Curtis distances.")
+
+# Compositional
+formula_aitch <- as.formula(paste("aitch_dist ~", variable))
+adonis_aitch <- adonis2(formula_aitch, data = physeq_meta)
+```
+
+#### PERMANOVA results for Aitchison
+```{r}
+kable(tidy(adonis_aitch), caption = "PERMANOVA on Aitchison distances.")
+```
+
+---
+
+## ⚠️ 7. Check Beta-Dispersion (for Valid PERMANOVA)
+ 
+
+Before fully trusting the PERMANOVA results, it's important to check whether 
+differences between groups are due to actual shifts in composition
+rather than differences in variability or spread within groups. 
+
+This is done using a **beta-dispersion test**, which is conceptually similar 
+to checking for homogeneity of variances in traditional ANOVA. 
+If group dispersions are significantly different, the PERMANOVA might detect
+"differences" simply because one group is more variable. 
+
+Here, we apply the `betadisper()` function to both the Bray-Curtis and 
+Aitchison distance matrices to test for such effects, 
+followed by an ANOVA to assess significance.
+
+```{r beta-dispersion, results='asis'}
+# Extract the grouping vector from the synchronized metadata
+grouping_vector <- physeq_meta[[variable]]
+
+# Classical
+disp_bray <- betadisper(bray_dist, grouping_vector)
+cat("### Beta-dispersion results for Bray-Curtis\n")
+kable(tidy(anova(disp_bray)), caption = "Beta-dispersion on Bray-Curtis distances.")
+
+# Compositional
+disp_aitch <- betadisper(aitch_dist, grouping_vector)
+cat("\n### Beta-dispersion results for Aitchison\n")
+kable(tidy(anova(disp_aitch)), caption = "Beta-dispersion on Aitchison distances.")
+```
+
+ 
+---
+
+## 🔗 Further Reading
+
+* Gloor GB et al. *Microbiome datasets are compositional*. Microbiome, 2017.
+* Quinn TP et al. *A field guide for the compositional analysis of any-omics data*. GigaScience, 2019.
+* [Microbiome R Package Documentation](https://microbiome.github.io)
+
+---
+
+QIB Core Bioinformatics

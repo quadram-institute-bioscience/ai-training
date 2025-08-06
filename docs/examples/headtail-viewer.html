@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Head and Tail</title>
+    <style>
+        :root {
+            --antiflash-white: #F0F1F1;
+            --apple-green: #B6BE00;
+            --pine-green: #097E74;
+            --charcoal: #2F3D46;
+            --charcoal-light: #3a4751;
+            --charcoal-lighter: #4a5761;
+            --charcoal-dark: #1a2329;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--charcoal);
+            color: #e0e0e0;
+        }
+        
+        #titleBar {
+            height: 50px;
+            background: var(--pine-green);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        
+        #titleBar h1 {
+            color: var(--antiflash-white);
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        #mainContent {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #dropZone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--charcoal-light);
+            margin: 20px;
+            border: 3px dashed var(--charcoal-lighter);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #dropZone.dragover {
+            background: var(--charcoal-lighter);
+            border-color: var(--apple-green);
+            box-shadow: 0 0 20px rgba(182, 190, 0, 0.2);
+        }
+        
+        #dropZone.processing {
+            border-color: #f4bf75;
+        }
+        
+        #dropZone.error {
+            border-color: #ac4142;
+            background: rgba(172, 65, 66, 0.1);
+        }
+        
+        .drop-message {
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        .drop-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        
+        .drop-text {
+            font-size: 20px;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+        
+        .drop-subtext {
+            font-size: 14px;
+            color: #707070;
+        }
+        
+        #output {
+            display: none;
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            background: var(--charcoal-dark);
+            margin: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--charcoal-lighter);
+        }
+        
+        #output.show {
+            display: block;
+        }
+        
+        .output-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: var(--apple-green);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .lines-container {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background: var(--charcoal);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--charcoal-lighter);
+            overflow-x: auto;
+            white-space: pre;
+        }
+        
+        .line {
+            display: flex;
+            padding: 2px 0;
+            min-width: fit-content;
+        }
+        
+        .line:hover {
+            background: rgba(182, 190, 0, 0.05);
+        }
+        
+        .line-number {
+            flex-shrink: 0;
+            width: 60px;
+            color: #5a5a5a;
+            text-align: right;
+            margin-right: 15px;
+            user-select: none;
+            border-right: 1px solid var(--charcoal-lighter);
+            padding-right: 15px;
+        }
+        
+        .line-content {
+            color: #d0d0d0;
+            white-space: pre;
+        }
+        
+        .separator {
+            text-align: center;
+            color: #5a5a5a;
+            margin: 20px 0;
+            font-style: italic;
+        }
+        
+        #statusBar {
+            height: 40px;
+            background: var(--charcoal-dark);
+            border-top: 1px solid var(--charcoal-lighter);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 13px;
+            color: #a0a0a0;
+        }
+        
+        .status-item {
+            margin-right: 30px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-label {
+            color: #707070;
+            margin-right: 8px;
+        }
+        
+        .status-value {
+            color: var(--apple-green);
+            font-weight: 500;
+        }
+        
+        #progressBar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--apple-green), var(--pine-green));
+            transition: width 0.3s ease;
+        }
+        
+        .error-message {
+            background: rgba(172, 65, 66, 0.2);
+            border: 1px solid #ac4142;
+            color: #f0a0a0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .processing-message {
+            color: #f4bf75;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Scrollbar styling for better visibility */
+        .lines-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        
+        .lines-container::-webkit-scrollbar-track {
+            background: var(--charcoal-dark);
+            border-radius: 4px;
+        }
+        
+        .lines-container::-webkit-scrollbar-thumb {
+            background: var(--charcoal-lighter);
+            border-radius: 4px;
+        }
+        
+        .lines-container::-webkit-scrollbar-thumb:hover {
+            background: var(--apple-green);
+        }
+    </style>
+</head>
+<body>
+    <div id="titleBar">
+        <h1>Head and Tail</h1>
+    </div>
+    
+    <div id="mainContent">
+        <div id="dropZone">
+            <div id="progressBar"></div>
+            <div class="drop-message" id="dropMessage">
+                <div class="drop-icon">📄</div>
+                <div class="drop-text">Drop a file here</div>
+                <div class="drop-subtext">Text files or .gz compressed text files</div>
+            </div>
+            <div id="output">
+                <div class="output-section">
+                    <div class="section-title">First 10 Lines</div>
+                    <div class="lines-container" id="firstLines"></div>
+                </div>
+                <div class="separator">• • • content omitted • • •</div>
+                <div class="output-section">
+                    <div class="section-title">Last 10 Lines</div>
+                    <div class="lines-container" id="lastLines"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="statusBar">
+        <div class="status-item">
+            <span class="status-label">File:</span>
+            <span class="status-value" id="fileName">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Size:</span>
+            <span class="status-value" id="fileSize">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Lines:</span>
+            <span class="status-value" id="lineCount">-</span>
+        </div>
+    </div>
+
+    <script>
+        // Utility function to format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Check if content is likely text by examining first chunk
+        function isLikelyText(bytes) {
+            // Check first 8KB for binary content
+            const checkSize = Math.min(bytes.length, 8192);
+            let nullBytes = 0;
+            let controlChars = 0;
+            
+            for (let i = 0; i < checkSize; i++) {
+                const byte = bytes[i];
+                
+                // Null byte is strong indicator of binary
+                if (byte === 0) {
+                    nullBytes++;
+                    if (nullBytes > 1) return false;
+                }
+                
+                // Count control characters (except tab, newline, carriage return)
+                if (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) {
+                    controlChars++;
+                }
+            }
+            
+            // If more than 10% control characters, probably binary
+            const controlRatio = controlChars / checkSize;
+            return controlRatio < 0.1;
+        }
+
+        // Stream reader for plain text files
+        async function* readTextLines(file) {
+            const CHUNK_SIZE = 64 * 1024; // 64KB chunks
+            const decoder = new TextDecoder('utf-8', { fatal: false });
+            let buffer = '';
+            let offset = 0;
+            let firstChunk = true;
+            
+            while (offset < file.size) {
+                const chunk = file.slice(offset, offset + CHUNK_SIZE);
+                const arrayBuffer = await chunk.arrayBuffer();
+                const bytes = new Uint8Array(arrayBuffer);
+                
+                // Check if first chunk looks like text
+                if (firstChunk) {
+                    if (!isLikelyText(bytes)) {
+                        throw new Error('File appears to be binary, not text');
+                    }
+                    firstChunk = false;
+                }
+                
+                const text = decoder.decode(bytes, { stream: true });
+                buffer += text;
+                
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+                
+                for (const line of lines) {
+                    yield line;
+                }
+                
+                offset += CHUNK_SIZE;
+                
+                // Update progress
+                const progress = (offset / file.size) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+            }
+            
+            // Yield any remaining content
+            if (buffer) {
+                yield buffer;
+            }
+        }
+
+        // Stream reader for gzipped files
+        async function* readGzippedLines(file) {
+            const stream = file.stream();
+            const decompressor = new DecompressionStream('gzip');
+            const decompressed = stream.pipeThrough(decompressor);
+            const reader = decompressed.getReader();
+            const decoder = new TextDecoder('utf-8', { fatal: false });
+            
+            let buffer = '';
+            let firstChunk = true;
+            let totalRead = 0;
+            
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    // Check if first decompressed chunk looks like text
+                    if (firstChunk) {
+                        if (!isLikelyText(value)) {
+                            throw new Error('Decompressed content appears to be binary, not text');
+                        }
+                        firstChunk = false;
+                    }
+                    
+                    totalRead += value.length;
+                    const text = decoder.decode(value, { stream: true });
+                    buffer += text;
+                    
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+                    
+                    for (const line of lines) {
+                        yield line;
+                    }
+                    
+                    // Approximate progress for gzipped files
+                    const progress = Math.min((totalRead / (file.size * 3)) * 100, 95);
+                    document.getElementById('progressBar').style.width = progress + '%';
+                }
+                
+                // Yield any remaining content
+                if (buffer) {
+                    yield buffer;
+                }
+            } finally {
+                reader.releaseLock();
+            }
+        }
+
+        // Process file and extract first/last lines
+        async function processFile(file) {
+            const isGzipped = file.name.toLowerCase().endsWith('.gz');
+            const lineReader = isGzipped ? readGzippedLines(file) : readTextLines(file);
+            
+            const firstLines = [];
+            const lastLines = [];
+            let lineNumber = 0;
+            
+            // Read all lines, keeping first 10 and last 10
+            for await (const line of lineReader) {
+                lineNumber++;
+                
+                if (lineNumber <= 10) {
+                    firstLines.push({ number: lineNumber, content: line });
+                }
+                
+                // Keep a sliding window of last 10 lines
+                lastLines.push({ number: lineNumber, content: line });
+                if (lastLines.length > 10) {
+                    lastLines.shift();
+                }
+            }
+            
+            return {
+                firstLines,
+                lastLines,
+                totalLines: lineNumber
+            };
+        }
+
+        // Display results
+        function displayResults(result) {
+            const formatLine = (line) => {
+                return `<div class="line"><span class="line-number">${line.number}:</span><span class="line-content">${escapeHtml(line.content)}</span></div>`;
+            };
+            
+            document.getElementById('firstLines').innerHTML = 
+                result.firstLines.map(formatLine).join('');
+            
+            document.getElementById('lastLines').innerHTML = 
+                result.lastLines.map(formatLine).join('');
+            
+            document.getElementById('lineCount').textContent = 
+                result.totalLines.toLocaleString();
+        }
+
+        // Escape HTML for safe display
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Handle file drop
+        async function handleFile(file) {
+            const dropZone = document.getElementById('dropZone');
+            const output = document.getElementById('output');
+            const dropMessage = document.getElementById('dropMessage');
+            
+            // Reset UI
+            dropZone.classList.remove('error');
+            output.classList.remove('show');
+            document.getElementById('progressBar').style.width = '0%';
+            
+            // Update status bar
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('lineCount').textContent = 'Processing...';
+            
+            // Show processing state
+            dropZone.classList.add('processing');
+            dropMessage.innerHTML = `
+                <div class="drop-icon">⚙️</div>
+                <div class="drop-text processing-message">Processing ${file.name}...</div>
+                <div class="drop-subtext">Reading and counting lines</div>
+            `;
+            
+            try {
+                const result = await processFile(file);
+                
+                // Complete progress bar
+                document.getElementById('progressBar').style.width = '100%';
+                
+                // Display results
+                displayResults(result);
+                output.classList.add('show');
+                dropMessage.style.display = 'none';
+                
+                // Remove processing state
+                dropZone.classList.remove('processing');
+                
+            } catch (error) {
+                console.error('Error processing file:', error);
+                
+                // Show error
+                dropZone.classList.remove('processing');
+                dropZone.classList.add('error');
+                dropMessage.innerHTML = `
+                    <div class="drop-icon">❌</div>
+                    <div class="drop-text">Error Processing File</div>
+                    <div class="error-message">${error.message}</div>
+                    <div class="drop-subtext">Please drop a valid text file or gzipped text file</div>
+                `;
+                
+                // Reset status bar
+                document.getElementById('lineCount').textContent = 'Error';
+                document.getElementById('progressBar').style.width = '0%';
+            }
+        }
+
+        // Set up drag and drop
+        const dropZone = document.getElementById('dropZone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                await handleFile(files[0]);
+            }
+        });
+        
+        // Allow clicking to select file as well
+        dropZone.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e) => {
+                if (e.target.files.length > 0) {
+                    await handleFile(e.target.files[0]);
+                }
+            };
+            input.click();
+        });
+    </script>
+</body>
+</html>
