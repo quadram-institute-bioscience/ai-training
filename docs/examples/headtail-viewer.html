@@ -294,6 +294,8 @@
             background: var(--apple-green);
         }
     </style>
+    <!-- Load fflate library from CDN (unpkg provides the UMD build) -->
+    <script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
 </head>
 <body>
     <div id="titleBar">
@@ -419,33 +421,48 @@
             }
         }
 
-        // Stream reader for gzipped files
+        // Stream reader for gzipped files using fflate
         async function* readGzippedLines(file) {
-            const stream = file.stream();
-            const decompressor = new DecompressionStream('gzip');
-            const decompressed = stream.pipeThrough(decompressor);
-            const reader = decompressed.getReader();
-            const decoder = new TextDecoder('utf-8', { fatal: false });
+            // Check if fflate is loaded
+            if (typeof fflate === 'undefined') {
+                throw new Error('fflate library not loaded. Please refresh the page.');
+            }
             
+            const decoder = new TextDecoder('utf-8', { fatal: false });
             let buffer = '';
-            let firstChunk = true;
-            let totalRead = 0;
+            let lineCount = 0;
+            
+            // For smaller files, we can read and decompress in one go
+            const arrayBuffer = await file.arrayBuffer();
+            const compressedData = new Uint8Array(arrayBuffer);
+            
+            // Create a promise-based wrapper for async decompression
+            const decompress = () => new Promise((resolve, reject) => {
+                // Use fflate's async gunzip which handles concatenated members
+                fflate.gunzip(compressedData, (err, decompressed) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(decompressed);
+                    }
+                });
+            });
             
             try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    
-                    // Check if first decompressed chunk looks like text
-                    if (firstChunk) {
-                        if (!isLikelyText(value)) {
-                            throw new Error('Decompressed content appears to be binary, not text');
-                        }
-                        firstChunk = false;
-                    }
-                    
-                    totalRead += value.length;
-                    const text = decoder.decode(value, { stream: true });
+                // Decompress the entire file (fflate handles concatenated members)
+                const decompressed = await decompress();
+                
+                // Check if decompressed content is text
+                if (!isLikelyText(decompressed)) {
+                    throw new Error('Decompressed content appears to be binary, not text');
+                }
+                
+                // Process decompressed data in chunks to avoid blocking
+                const CHUNK_SIZE = 256 * 1024; // 256KB chunks for processing
+                
+                for (let i = 0; i < decompressed.length; i += CHUNK_SIZE) {
+                    const chunk = decompressed.slice(i, Math.min(i + CHUNK_SIZE, decompressed.length));
+                    const text = decoder.decode(chunk, { stream: true });
                     buffer += text;
                     
                     const lines = buffer.split('\n');
@@ -453,10 +470,11 @@
                     
                     for (const line of lines) {
                         yield line;
+                        lineCount++;
                     }
                     
-                    // Approximate progress for gzipped files
-                    const progress = Math.min((totalRead / (file.size * 3)) * 100, 95);
+                    // Update progress based on decompressed data processing
+                    const progress = ((i + chunk.length) / decompressed.length) * 100;
                     document.getElementById('progressBar').style.width = progress + '%';
                 }
                 
@@ -464,15 +482,20 @@
                 if (buffer) {
                     yield buffer;
                 }
-            } finally {
-                reader.releaseLock();
+                
+            } catch (err) {
+                throw new Error(`Failed to decompress gzip file: ${err.message}`);
             }
         }
 
         // Process file and extract first/last lines
         async function processFile(file) {
             const isGzipped = file.name.toLowerCase().endsWith('.gz');
-            const lineReader = isGzipped ? readGzippedLines(file) : readTextLines(file);
+            
+            // Use appropriate reader based on file type
+            const lineReader = isGzipped 
+                ? readGzippedLines(file)
+                : readTextLines(file);
             
             const firstLines = [];
             const lastLines = [];
@@ -490,6 +513,12 @@
                 lastLines.push({ number: lineNumber, content: line });
                 if (lastLines.length > 10) {
                     lastLines.shift();
+                }
+                
+                // Update line count periodically for large files
+                if (lineNumber % 1000 === 0) {
+                    document.getElementById('lineCount').textContent = 
+                        `${lineNumber.toLocaleString()}+ (processing...)`;
                 }
             }
             
