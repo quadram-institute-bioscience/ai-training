@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SeqFu Stats</title>
+    <!-- Load fflate library from unpkg (properly handles UMD) -->
+    <script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
     <style>
         :root {
             --antiflash-white: #F0F1F1;
@@ -454,90 +456,264 @@
             return Math.round(num).toLocaleString();
         }
         
-        // Memory-efficient streaming FASTA/FASTQ parser
-        async function* parseSequencesChunked(reader, isGzipped) {
-            const decoder = new TextDecoder();
+        // Stream-based parser for FASTA/FASTQ with proper handling
+        async function* streamParseFastaFastq(reader, hasReleaseLock = true) {
+            const decoder = new TextDecoder('utf-8', { fatal: false });
             let buffer = '';
             let currentHeader = null;
             let currentSeq = '';
-            let inQuality = false;
-            let qualityBuffer = '';
             let fileFormat = null;
+            let fastqState = 0; // 0=header, 1=seq, 2=plus, 3=qual
+            let lineCount = 0;
             
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    // Process any remaining sequence
-                    if (currentHeader && currentSeq) {
-                        yield {
-                            name: currentHeader.substring(1).split(/\s+/)[0],
-                            sequence: currentSeq,
-                            quality: null
-                        };
-                    }
-                    break;
-                }
-                
-                // Decode chunk and add to buffer
-                buffer += decoder.decode(value, { stream: true });
-                
-                // Process lines from buffer
-                let lineEnd;
-                while ((lineEnd = buffer.indexOf('\n')) !== -1) {
-                    const line = buffer.substring(0, lineEnd).trim();
-                    buffer = buffer.substring(lineEnd + 1);
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
                     
-                    if (line.length === 0) continue;
+                    // Decode chunk - value is either text string or Uint8Array
+                    const text = typeof value === 'string' ? value : decoder.decode(value, { stream: true });
+                    buffer += text;
                     
-                    // Handle quality lines for FASTQ
-                    if (inQuality) {
-                        qualityBuffer += line;
-                        if (qualityBuffer.length >= currentSeq.length) {
-                            yield {
-                                name: currentHeader.substring(1).split(/\s+/)[0],
-                                sequence: currentSeq,
-                                quality: qualityBuffer.substring(0, currentSeq.length)
-                            };
-                            currentHeader = null;
-                            currentSeq = '';
-                            qualityBuffer = '';
-                            inQuality = false;
+                    // Process complete lines
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || ''; // Keep incomplete line
+                    
+                    for (const line of lines) {
+                        lineCount++;
+                        const trimmedLine = line.trim();
+                        
+                        // Skip empty lines for FASTA
+                        if (!trimmedLine && fileFormat === 'FASTA') continue;
+                        
+                        // Detect format from first non-empty line
+                        if (fileFormat === null && trimmedLine) {
+                            if (trimmedLine[0] === '>') {
+                                fileFormat = 'FASTA';
+                                currentHeader = trimmedLine;
+                                currentSeq = '';
+                            } else if (trimmedLine[0] === '@') {
+                                fileFormat = 'FASTQ';
+                                currentHeader = trimmedLine;
+                                fastqState = 1;
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-                    
-                    // Check for headers
-                    if (line[0] === '>' || line[0] === '@') {
-                        // Yield previous sequence if exists
-                        if (currentHeader && currentSeq) {
-                            if (fileFormat === 'FASTA' || fileFormat === null) {
-                                yield {
-                                    name: currentHeader.substring(1).split(/\s+/)[0],
-                                    sequence: currentSeq,
-                                    quality: null
-                                };
+                        
+                        // Process based on format
+                        if (fileFormat === 'FASTQ') {
+                            switch (fastqState) {
+                                case 0: // Expecting header
+                                    if (trimmedLine && trimmedLine[0] === '@') {
+                                        currentHeader = trimmedLine;
+                                        currentSeq = '';
+                                        fastqState = 1;
+                                    }
+                                    break;
+                                case 1: // Expecting sequence
+                                    currentSeq = trimmedLine;
+                                    fastqState = 2;
+                                    break;
+                                case 2: // Expecting +
+                                    if (line.trim().startsWith('+')) {
+                                        fastqState = 3;
+                                    }
+                                    break;
+                                case 3: // Expecting quality
+                                    // Process the complete FASTQ record
+                                    if (currentHeader && currentSeq) {
+                                        yield { header: currentHeader, sequence: currentSeq, format: 'FASTQ' };
+                                    }
+                                    fastqState = 0;
+                                    break;
+                            }
+                        } else if (fileFormat === 'FASTA') {
+                            if (trimmedLine[0] === '>') {
+                                // New sequence - yield previous if exists
+                                if (currentHeader && currentSeq) {
+                                    yield { header: currentHeader, sequence: currentSeq, format: 'FASTA' };
+                                }
+                                currentHeader = trimmedLine;
+                                currentSeq = '';
+                            } else {
+                                // Append to current sequence
+                                currentSeq += trimmedLine;
                             }
                         }
-                        currentHeader = line;
-                        currentSeq = '';
-                        if (line[0] === '>') {
-                            fileFormat = 'FASTA';
-                        } else if (line[0] === '@') {
-                            fileFormat = 'FASTQ';
-                        }
-                    } else if (line[0] === '+' && fileFormat === 'FASTQ') {
-                        // Start reading quality
-                        inQuality = true;
-                        qualityBuffer = '';
-                    } else if (currentHeader) {
-                        // Accumulate sequence
-                        currentSeq += line;
                     }
+                }
+                
+                // Process remaining buffer
+                if (buffer) {
+                    const lines = buffer.split('\n');
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (fileFormat === 'FASTA' && trimmedLine && trimmedLine[0] !== '>') {
+                            currentSeq += trimmedLine;
+                        }
+                    }
+                }
+                
+                // Yield last sequence if exists
+                if (currentHeader && currentSeq) {
+                    yield { header: currentHeader, sequence: currentSeq, format: fileFormat };
+                }
+            } finally {
+                // Only call releaseLock if the reader has this method
+                if (hasReleaseLock && reader.releaseLock) {
+                    reader.releaseLock();
                 }
             }
         }
         
-        // Calculate N50, N75, N90 with memory-efficient approach
+        // Decompress gzipped file with proper multi-member handling
+        async function* decompressGzip(file) {
+            // Check if fflate is available
+            if (typeof fflate === 'undefined') {
+                throw new Error('fflate library not loaded. Please refresh the page.');
+            }
+            
+            console.log('Starting gzip decompression for:', file.name);
+            const startTime = Date.now();
+            
+            // Read entire file into memory
+            const arrayBuffer = await file.arrayBuffer();
+            const compressedData = new Uint8Array(arrayBuffer);
+            
+            console.log('File loaded, size:', formatFileSize(compressedData.length));
+            
+            // Use fflate's gunzip which handles concatenated members
+            const decompress = () => new Promise((resolve, reject) => {
+                fflate.gunzip(compressedData, (err, decompressed) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(decompressed);
+                    }
+                });
+            });
+            
+            try {
+                // Decompress the entire file
+                const decompressed = await decompress();
+                console.log('Decompression complete:', formatFileSize(decompressed.length), 
+                           'in', Date.now() - startTime, 'ms');
+                
+                // Yield decompressed data in chunks for streaming
+                const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+                for (let i = 0; i < decompressed.length; i += CHUNK_SIZE) {
+                    const chunk = decompressed.slice(i, Math.min(i + CHUNK_SIZE, decompressed.length));
+                    yield chunk;
+                }
+            } catch (error) {
+                console.error('Gzip decompression failed:', error);
+                throw new Error(`Failed to decompress gzip file: ${error.message}`);
+            }
+        }
+        
+        // Process sequence file with statistics calculation
+        async function processFile(file) {
+            const isGzipped = file.name.toLowerCase().endsWith('.gz');
+            
+            // Statistics
+            const lengthCounts = {};
+            let totalLength = 0;
+            let totalSequences = 0;
+            let totalGC = 0;
+            let totalQualifiedBases = 0;
+            let minLen = Infinity;
+            let maxLen = 0;
+            let fileFormat = null;
+            
+            try {
+                // Create appropriate reader
+                let recordGenerator;
+                
+                if (isGzipped) {
+                    // Decompress and parse
+                    const decompressedChunks = decompressGzip(file);
+                    
+                    // Create a custom reader that yields decompressed chunks
+                    const reader = {
+                        read: async function() {
+                            const { value, done } = await decompressedChunks.next();
+                            return { value, done };
+                        }
+                    };
+                    
+                    recordGenerator = streamParseFastaFastq(reader, false);
+                } else {
+                    // Direct text file reading
+                    const stream = file.stream();
+                    const reader = stream.getReader();
+                    recordGenerator = streamParseFastaFastq(reader, false);
+                }
+                
+                // Process each record
+                for await (const record of recordGenerator) {
+                    totalSequences++;
+                    fileFormat = record.format;
+                    
+                    const seqLength = record.sequence.length;
+                    totalLength += seqLength;
+                    
+                    // Update length counts
+                    lengthCounts[seqLength] = (lengthCounts[seqLength] || 0) + 1;
+                    
+                    // Update min/max
+                    minLen = Math.min(minLen, seqLength);
+                    maxLen = Math.max(maxLen, seqLength);
+                    
+                    // Count GC and qualified bases
+                    for (let i = 0; i < record.sequence.length; i++) {
+                        const base = record.sequence[i].toUpperCase();
+                        if (base === 'G' || base === 'C') {
+                            totalGC++;
+                        }
+                        if (base === 'A' || base === 'T' || base === 'G' || base === 'C') {
+                            totalQualifiedBases++;
+                        }
+                    }
+                    
+                    // Update progress periodically
+                    if (totalSequences % 1000 === 0) {
+                        document.getElementById('seqCount').textContent = 
+                            `${formatNumber(totalSequences)}+ (processing...)`;
+                        document.getElementById('progressBar').style.width = 
+                            `${Math.min(95, (totalSequences / 10000) * 100)}%`;
+                        
+                        // Allow UI to update
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
+                }
+                
+                // Calculate final statistics
+                const avgLength = totalLength / totalSequences;
+                const gcContent = (totalGC / totalLength) * 100;
+                const nMetrics = calculateNMetrics(lengthCounts, totalLength);
+                
+                document.getElementById('progressBar').style.width = '100%';
+                
+                return {
+                    totalSequences,
+                    totalLength,
+                    avgLength,
+                    gcContent,
+                    minLen: minLen === Infinity ? 0 : minLen,
+                    maxLen,
+                    lengthCounts,
+                    fileFormat: fileFormat || 'FASTA',
+                    totalQualifiedBases,
+                    ...nMetrics
+                };
+                
+            } catch (error) {
+                console.error('Error processing file:', error);
+                throw error;
+            }
+        }
+        
+        // Calculate N50, N75, N90 metrics
         function calculateNMetrics(lengthCounts, totalLength) {
             // Sort lengths in descending order
             const sortedLengths = Object.entries(lengthCounts)
@@ -567,90 +743,6 @@
             }
             
             return metrics;
-        }
-        
-        // Process sequence file with streaming
-        async function processFile(file) {
-            const isGzipped = file.name.toLowerCase().endsWith('.gz');
-            
-            // Create stream reader
-            let stream = file.stream();
-            if (isGzipped) {
-                const decompressor = new DecompressionStream('gzip');
-                stream = stream.pipeThrough(decompressor);
-            }
-            
-            const reader = stream.getReader();
-            
-            // Statistics variables
-            const lengthCounts = {};
-            let totalLength = 0;
-            let totalSequences = 0;
-            let totalGC = 0;
-            let totalQualifiedBases = 0;
-            let minLen = Infinity;
-            let maxLen = 0;
-            let fileFormat = null;
-            
-            // Process sequences in streaming fashion
-            let processedCount = 0;
-            const updateInterval = 100; // Update progress every 100 sequences
-            
-            for await (const record of parseSequencesChunked(reader, isGzipped)) {
-                totalSequences++;
-                
-                // Determine format from first record
-                if (fileFormat === null) {
-                    fileFormat = record.quality !== null ? 'FASTQ' : 'FASTA';
-                }
-                
-                const seqLength = record.sequence.length;
-                totalLength += seqLength;
-                
-                // Update length counts
-                lengthCounts[seqLength] = (lengthCounts[seqLength] || 0) + 1;
-                
-                // Update min/max
-                minLen = Math.min(minLen, seqLength);
-                maxLen = Math.max(maxLen, seqLength);
-                
-                // Count GC and qualified bases
-                for (let i = 0; i < record.sequence.length; i++) {
-                    const base = record.sequence[i].toUpperCase();
-                    if (base === 'G' || base === 'C') {
-                        totalGC++;
-                    }
-                    if (base === 'A' || base === 'T' || base === 'G' || base === 'C') {
-                        totalQualifiedBases++;
-                    }
-                }
-                
-                // Update progress periodically
-                if (++processedCount % updateInterval === 0) {
-                    const estimatedProgress = Math.min(95, (processedCount / 1000) * 10);
-                    document.getElementById('progressBar').style.width = estimatedProgress + '%';
-                }
-            }
-            
-            // Set final progress
-            document.getElementById('progressBar').style.width = '100%';
-            
-            const avgLength = totalLength / totalSequences;
-            const gcContent = (totalGC / totalLength) * 100;
-            const nMetrics = calculateNMetrics(lengthCounts, totalLength);
-            
-            return {
-                totalSequences,
-                totalLength,
-                avgLength,
-                gcContent,
-                minLen,
-                maxLen,
-                lengthCounts,
-                fileFormat,
-                totalQualifiedBases,
-                ...nMetrics
-            };
         }
         
         // Display results
