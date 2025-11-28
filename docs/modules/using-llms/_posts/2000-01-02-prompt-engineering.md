@@ -9,14 +9,17 @@ Prompt engineering is the practice of designing and optimizing input prompts to 
 ### What is Prompt Engineering?
 
 Prompt engineering involves:
+
 - **Crafting Instructions**: Writing clear, specific directions
 - **Providing Context**: Including relevant background information
 - **Structuring Input**: Organizing information effectively
 - **Iterating and Refining**: Improving prompts based on results
 
-:bulb: we saw how the **transformer** allows to "soak" the context. Therefore, the more relevant and specific context we provide, the better the results.
+:bulb: we saw how the **transformer** allows to "soak" the context. 
+Therefore, the more relevant and specific context we provide, the better the results.
 
 :arrow_right: Read more about this topic from [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) or the   [Best Practices for OpenAI API](https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api) 
+
 ### Core Principles
 
 #### Clarity and Specificity
@@ -41,7 +44,7 @@ You can add more context like:
 * ✅ Good: "First, summarize the key trends in this sales data. Then, identify the top 3 performance issues. Finally, suggest specific action items for each issue."
 
 
-### Essential Techniques
+### Some useful techniques
 
 #### :one: Role Playing
 Assign the AI a specific role or persona:
@@ -66,32 +69,42 @@ Email: "Meeting moved to 3 PM tomorrow"
 Classification: Not Spam
 
 Email: "Click here for amazing weight loss secrets!"
-Classification: ?
+Classification: Probably Spam
 ```
 
 #### :three: Chain of Thought
 Guide the model through step-by-step reasoning:
 
 ```
-"Solve this math problem step by step:
-What is 15% of 240?
+We need to choose between holding our workshop in-person or online.
 
-Step 1: Convert percentage to decimal
-Step 2: Multiply the number by the decimal
-Step 3: Show the final answer"
+  Analyze this decision step by step:
+  Step 1: List key factors to consider (costs, accessibility, engagement, logistics)
+  Step 2: Evaluate each format against these factors
+  Step 3: Identify the main trade-offs
+  Step 4: Recommend the best option with justification
 ```
 
+:bulb: math problems are poorly managed in general, and a good alternative is to ask to generate 
+code to solve the problem instead.
+
 #### :four: Output Formatting
+
 Specify exactly how you want the response structured:
 
 ```
-"Analyze this product review and provide:
-1. Overall sentiment (Positive/Negative/Neutral)
-2. Key themes (max 3)
-3. Specific issues mentioned
-4. Recommended actions
+Analyze this meeting summary and structure your response as:
 
-Format as JSON with these exact keys."
+Key Decisions
+  - [list decisions made]
+
+Action Items
+  - [person]: [task] - [deadline]
+
+Open Questions
+  - [questions requiring follow-up]
+
+Use markdown formatting with these exact headings.
 ```
 
 ### More Techniques
