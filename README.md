@@ -22,3 +22,4 @@ Thanks for stopping by!
 Dive in, remix, share — and let’s build understanding together.
 
 
+# bash-training
