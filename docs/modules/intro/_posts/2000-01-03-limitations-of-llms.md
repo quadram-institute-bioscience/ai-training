@@ -17,6 +17,7 @@ This is the answer that an old version of ChatGPT gave:
 
 ![A solution (wrong)]({{ site.baseurl }}/{% link img/5-gpt.png %})
 
+ℹ️ This prompt was given to GPT 3.5, and newer versions improved in handling these examples. But the take home message remains!
 
 **Why is that?**
 
