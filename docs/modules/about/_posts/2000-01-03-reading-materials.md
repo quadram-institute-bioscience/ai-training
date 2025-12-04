@@ -8,6 +8,7 @@ This page contains essential and supplementary reading materials to support your
 All the readings are **entry level**, and usually require no specialized knowledge.
 
 #### Books
+
 - **[The StatQuest Illustrated Guide To Machine Learning](https://www.amazon.com/StatQuest-Illustrated-Guide-Machine-Learning/dp/B0BLM4TLPY)** by Josh Starmer  
 - *[How Not to Be Wrong: The Power of Mathematical Thinking](https://www.amazon.com/How-Not-Be-Wrong-Mathematical-ebook/dp/B00G3L6JQ4?ref_=ast_author_mpb)* by Jordan Ellenberg  
  
