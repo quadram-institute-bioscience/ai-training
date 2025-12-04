@@ -1,6 +1,9 @@
 # 🤖 AI Training for Researchers
  
-> This repository was made with Claude Code 
+> This repository was made with Claude Code
+
+
+### [Website](https://quadram-institute-bioscience.github.io/ai-training)
 
 ## 🌍 Who's it for?
 
