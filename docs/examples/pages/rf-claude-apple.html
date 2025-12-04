@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rosalind Franklin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1d1d1f;
+            line-height: 1.5;
+            background: #fff;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 12px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 1;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 100px 24px;
+            background: linear-gradient(180deg, #fbfbfd 0%, #fff 100%);
+        }
+        
+        .hero-eyebrow {
+            font-size: 21px;
+            font-weight: 600;
+            color: #6e6e73;
+            margin-bottom: 8px;
+        }
+        
+        .hero h1 {
+            font-size: clamp(48px, 10vw, 96px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.05;
+            background: linear-gradient(90deg, #1d1d1f 0%, #515154 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-tagline {
+            font-size: clamp(21px, 4vw, 28px);
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-top: 16px;
+            max-width: 600px;
+        }
+        
+        .hero-dates {
+            font-size: 19px;
+            color: #86868b;
+            margin-top: 24px;
+        }
+        
+        .hero-cta {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 980px;
+            font-size: 17px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #0071e3;
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+        
+        .btn-secondary {
+            color: #0071e3;
+        }
+        
+        .btn-secondary:hover {
+            text-decoration: underline;
+        }
+        
+        /* Section Styles */
+        section {
+            padding: 100px 24px;
+        }
+        
+        .section-dark {
+            background: #1d1d1f;
+            color: #f5f5f7;
+        }
+        
+        .section-gray {
+            background: #fbfbfd;
+        }
+        
+        .section-content {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .section-header h2 {
+            font-size: clamp(32px, 6vw, 56px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+        
+        .section-header p {
+            font-size: 21px;
+            color: #86868b;
+            margin-top: 16px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .section-dark .section-header p {
+            color: #a1a1a6;
+        }
+        
+        /* Photo 51 Feature */
+        .photo51-section {
+            background: #000;
+            color: #f5f5f7;
+            text-align: center;
+            padding: 120px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .photo51-visual {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #333 0%, #000 70%);
+            position: relative;
+            box-shadow: 0 0 100px rgba(255,255,255,0.1);
+        }
+        
+        .photo51-visual::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(255,255,255,0.03) 10deg 20deg);
+            border-radius: 50%;
+        }
+        
+        .photo51-visual::after {
+            content: 'X';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            font-weight: 200;
+            color: rgba(255,255,255,0.15);
+        }
+        
+        .photo51-section h2 {
+            font-size: clamp(40px, 8vw, 64px);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .photo51-section p {
+            font-size: 21px;
+            color: #a1a1a6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+        }
+        
+        .timeline-item {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 40px;
+            padding: 40px 0;
+            border-bottom: 1px solid #d2d2d7;
+        }
+        
+        .section-dark .timeline-item {
+            border-bottom-color: #424245;
+        }
+        
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+        
+        .timeline-year {
+            font-size: 17px;
+            font-weight: 600;
+            color: #86868b;
+        }
+        
+        .section-dark .timeline-year {
+            color: #a1a1a6;
+        }
+        
+        .timeline-content h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .timeline-content h4 {
+            font-size: 17px;
+            color: #0071e3;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        
+        .timeline-content p {
+            font-size: 17px;
+            color: #515154;
+            line-height: 1.6;
+        }
+        
+        .section-dark .timeline-content p {
+            color: #a1a1a6;
+        }
+        
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .feature-card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .feature-card p {
+            font-size: 15px;
+            color: #515154;
+            line-height: 1.5;
+        }
+        
+        /* Skills Pills */
+        .skills-section {
+            text-align: center;
+        }
+        
+        .skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .skill-pill {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            padding: 12px 24px;
+            border-radius: 980px;
+            font-size: 17px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .skill-pill:hover {
+            background: #0071e3;
+            color: #fff;
+            transform: scale(1.05);
+        }
+        
+        /* Quote Section */
+        .quote-section {
+            background: linear-gradient(135deg, #1d1d1f 0%, #2d2d2f 100%);
+            color: #f5f5f7;
+            text-align: center;
+            padding: 140px 24px;
+        }
+        
+        .quote-section blockquote {
+            font-size: clamp(28px, 5vw, 40px);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            line-height: 1.3;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .quote-section cite {
+            display: block;
+            margin-top: 32px;
+            font-size: 17px;
+            font-style: normal;
+            color: #86868b;
+        }
+        
+        /* Legacy Grid */
+        .legacy-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .legacy-card {
+            background: #f5f5f7;
+            border-radius: 20px;
+            padding: 32px;
+            transition: transform 0.3s;
+        }
+        
+        .legacy-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .legacy-card.featured {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #0071e3 0%, #00c7be 100%);
+            color: #fff;
+        }
+        
+        .legacy-year {
+            font-size: 14px;
+            font-weight: 600;
+            color: #86868b;
+            margin-bottom: 8px;
+        }
+        
+        .legacy-card.featured .legacy-year {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .legacy-card h3 {
+            font-size: 21px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .legacy-card p {
+            font-size: 15px;
+            color: #515154;
+        }
+        
+        .legacy-card.featured p {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        /* Footer */
+        footer {
+            background: #f5f5f7;
+            padding: 40px 24px;
+            text-align: center;
+        }
+        
+        footer p {
+            font-size: 12px;
+            color: #86868b;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 1rem;
+            }
+            
+            .timeline-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .legacy-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .legacy-card.featured {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#discovery">Discovery</a></li>
+            <li><a href="#career">Career</a></li>
+            <li><a href="#expertise">Expertise</a></li>
+            <li><a href="#legacy">Legacy</a></li>
+        </ul>
+    </nav>
+    
+    <section class="hero" id="overview">
+        <p class="hero-eyebrow">Chemist & X-ray Crystallographer</p>
+        <h1>Rosalind Franklin</h1>
+        <p class="hero-tagline">The scientist who revealed the secret of life.</p>
+        <p class="hero-dates">1920 — 1958</p>
+        <div class="hero-cta">
+            <a href="#discovery" class="btn btn-primary">Explore her work</a>
+            <a href="#legacy" class="btn btn-secondary">View legacy →</a>
+        </div>
+    </section>
+    
+    <section class="photo51-section" id="discovery">
+        <div class="photo51-visual"></div>
+        <h2>Photo 51</h2>
+        <p>The X-ray diffraction image that changed everything. A single photograph that revealed DNA's double helix structure and transformed our understanding of life itself.</p>
+    </section>
+    
+    <section class="section-gray">
+        <div class="section-content">
+            <div class="section-header">
+                <h2>Groundbreaking discoveries.</h2>
+                <p>Four areas of research that shaped modern science.</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🧬</div>
+                    <h3>DNA Structure</h3>
+                    <p>First to discover and characterise the A and B forms of DNA, providing crucial data for the double helix model.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔬</div>
+                    <h3>Virus Architecture</h3>
+                    <p>Determined the structure of tobacco mosaic virus and proved all TMV particles are uniform in length.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚛️</div>
+                    <h3>Carbon Science</h3>
+                    <p>Pioneered understanding of coal microstructure and coined "graphitising carbon" terminology still used today.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>RNA Location</h3>
+                    <p>Discovered that RNA winds along the inner surface of the tobacco mosaic virus hollow structure.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="quote-section">
+        <blockquote>"Science and everyday life cannot and should not be separated."</blockquote>
+        <cite>Rosalind Franklin, 1940</cite>
+    </section>
+    
+    <section class="section-dark" id="career">
+        <div class="section-content">
+            <div class="section-header">
+                <h2>A remarkable career.</h2>
+                <p>From Cambridge to Paris to London, a journey of scientific excellence.</p>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">1953–58</div>
+                    <div class="timeline-content">
+                        <h3>Senior Scientist</h3>
+                        <h4>Birkbeck College, London</h4>
+                        <p>Led pioneering research on viral structures including TMV and polio virus. Built and led the Agricultural Research Council group, supervising future Nobel laureate Aaron Klug.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1951–53</div>
+                    <div class="timeline-content">
+                        <h3>Research Associate</h3>
+                        <h4>King's College London</h4>
+                        <p>Produced the landmark Photo 51 X-ray diffraction image. Discovered DNA's A and B forms and demonstrated that phosphate groups lie on the molecule's exterior.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1947–50</div>
+                    <div class="timeline-content">
+                        <h3>Postdoctoral Researcher</h3>
+                        <h4>Laboratoire Central, Paris</h4>
+                        <p>Mastered X-ray crystallography under Jacques Mering. Applied techniques to carbon structures, establishing foundational principles in coal and graphite chemistry.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1942–45</div>
+                    <div class="timeline-content">
+                        <h3>Research Officer</h3>
+                        <h4>British Coal Utilisation Research Association</h4>
+                        <p>Studied coal porosity for wartime applications including gas mask production. Research formed the basis of her Cambridge PhD thesis.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1938–41</div>
+                    <div class="timeline-content">
+                        <h3>Natural Sciences</h3>
+                        <h4>Newnham College, Cambridge</h4>
+                        <p>Graduated with honours in Chemistry. Awarded research fellowship and began doctoral studies in physical chemistry.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="expertise">
+        <div class="section-content skills-section">
+            <div class="section-header">
+                <h2>Technical mastery.</h2>
+                <p>Expertise that pushed the boundaries of what was possible.</p>
+            </div>
+            <div class="skills-grid">
+                <span class="skill-pill">X-ray Crystallography</span>
+                <span class="skill-pill">X-ray Diffraction</span>
+                <span class="skill-pill">Physical Chemistry</span>
+                <span class="skill-pill">Patterson Function Analysis</span>
+                <span class="skill-pill">Molecular Modelling</span>
+                <span class="skill-pill">Carbon Chemistry</span>
+                <span class="skill-pill">Structural Virology</span>
+                <span class="skill-pill">Microscopy</span>
+                <span class="skill-pill">Scientific Photography</span>
+            </div>
+        </div>
+    </section>
+    
+    <section class="section-gray" id="legacy">
+        <div class="section-content">
+            <div class="section-header">
+                <h2>An enduring legacy.</h2>
+                <p>Honours and recognitions that ensure her contribution is never forgotten.</p>
+            </div>
+            <div class="legacy-grid">
+                <div class="legacy-card featured">
+                    <div class="legacy-year">2003</div>
+                    <h3>Royal Society Rosalind Franklin Award</h3>
+                    <p>Established for outstanding contribution to any area of natural science, engineering or technology. Includes a silver medal and £30,000 grant.</p>
+                </div>
+                <div class="legacy-card">
+                    <div class="legacy-year">2004</div>
+                    <h3>Rosalind Franklin University</h3>
+                    <p>Chicago medical school renamed in her honour, adopting Photo 51 as its official logo.</p>
+                </div>
+                <div class="legacy-card">
+                    <div class="legacy-year">2000</div>
+                    <h3>Franklin-Wilkins Building</h3>
+                    <p>King's College London honours both scientists with a building bearing their names.</p>
+                </div>
+                <div class="legacy-card">
+                    <div class="legacy-year">1997</div>
+                    <h3>Asteroid 9241 Rosfranklin</h3>
+                    <p>A newly discovered asteroid named in recognition of her scientific achievements.</p>
+                </div>
+                <div class="legacy-card">
+                    <div class="legacy-year">1992</div>
+                    <h3>English Heritage Blue Plaque</h3>
+                    <p>Commemorative plaque placed at Drayton Gardens, London, where she lived.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <p>Rosalind Elsie Franklin · 25 July 1920 – 16 April 1958 · London, England</p>
+        <p style="margin-top: 8px;">Her research and discoveries on viruses remain of lasting benefit to mankind.</p>
+    </footer>
+</body>
+</html>

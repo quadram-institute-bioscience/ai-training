@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rosalind Franklin - Curriculum Vitae</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #000;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Header / Summary Section */
+        header {
+            background: linear-gradient(135deg, #971313 0%, #6b0e0e 100%);
+            color: #fff;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin-bottom: 0.5rem;
+        }
+        
+        header .dates {
+            font-size: 1.1rem;
+            color: #c7c7c7;
+            margin-bottom: 1.5rem;
+        }
+        
+        header .tagline {
+            font-size: 1.2rem;
+            font-weight: 500;
+            border-top: 1px solid rgba(199,199,199,0.3);
+            border-bottom: 1px solid rgba(199,199,199,0.3);
+            padding: 1rem 0;
+            margin: 1.5rem 0;
+        }
+        
+        .summary {
+            background: #fff;
+            padding: 2rem;
+            text-align: left;
+            max-width: 800px;
+            margin: -1.5rem auto 0;
+            position: relative;
+            border-left: 4px solid #971313;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .summary p {
+            font-size: 1rem;
+            color: #333;
+        }
+        
+        /* Main Content */
+        main {
+            padding: 2rem;
+        }
+        
+        section {
+            margin-bottom: 2.5rem;
+        }
+        
+        h2 {
+            color: #971313;
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid #c7c7c7;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        h3 {
+            color: #000;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        h4 {
+            color: #555;
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+        
+        .entry {
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            border-left: 2px solid #c7c7c7;
+        }
+        
+        .entry:hover {
+            border-left-color: #971313;
+        }
+        
+        .date-range {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #666;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.85rem;
+            border-radius: 3px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .entry p {
+            color: #444;
+            font-size: 0.95rem;
+        }
+        
+        /* Key Achievements */
+        .achievements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .achievement-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        
+        .achievement-card h4 {
+            color: #971313;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Skills / Expertise */
+        .skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .skill-tag {
+            background: #971313;
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 20px;
+        }
+        
+        /* Publications highlight */
+        .publication {
+            background: #f9f9f9;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+        
+        .publication .journal {
+            color: #971313;
+            font-style: italic;
+        }
+        
+        /* Languages */
+        .languages {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .language-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .language-level {
+            width: 100px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .language-level .fill {
+            height: 100%;
+            background: #971313;
+        }
+        
+        /* Footer */
+        footer {
+            background: #333;
+            color: #c7c7c7;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        footer .quote {
+            font-style: italic;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 2rem 1rem;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            main {
+                padding: 1.5rem 1rem;
+            }
+            
+            .summary {
+                margin: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ROSALIND ELSIE FRANKLIN</h1>
+            <p class="dates">25 July 1920 – 16 April 1958</p>
+            <p class="tagline">Chemist &amp; X-ray Crystallographer</p>
+        </header>
+        
+        <div class="summary">
+            <p>Pioneering English chemist and X-ray crystallographer whose work was central to understanding the molecular structures of DNA, RNA, viruses, coal, and graphite. Her X-ray diffraction images of DNA, particularly Photo 51, provided crucial evidence for the double helix structure. A meticulous experimentalist who made lasting contributions to molecular biology and virology, her research on viruses at Birkbeck College established fundamental principles still relevant today.</p>
+        </div>
+        
+        <main>
+            <section>
+                <h2>Education</h2>
+                
+                <div class="entry">
+                    <span class="date-range">1942 – 1945</span>
+                    <h3>PhD in Physical Chemistry</h3>
+                    <h4>University of Cambridge</h4>
+                    <p>Thesis: "The physical chemistry of solid organic colloids with special reference to coal"</p>
+                </div>
+                
+                <div class="entry">
+                    <span class="date-range">1938 – 1941</span>
+                    <h3>Natural Sciences Tripos</h3>
+                    <h4>Newnham College, Cambridge</h4>
+                    <p>Graduated with Second-Class Honours in Chemistry. Awarded research fellowship upon completion.</p>
+                </div>
+                
+                <div class="entry">
+                    <span class="date-range">1931 – 1938</span>
+                    <h3>Secondary Education</h3>
+                    <h4>St Paul's Girls' School, London</h4>
+                    <p>Excelled in science, Latin, and sports. Passed matriculation with six distinctions, winning a university scholarship.</p>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Professional Experience</h2>
+                
+                <div class="entry">
+                    <span class="date-range">1953 – 1958</span>
+                    <h3>Research Associate / Senior Scientist</h3>
+                    <h4>Birkbeck College, University of London</h4>
+                    <p>Led Agricultural Research Council group studying viral structures. Conducted pioneering X-ray crystallography research on tobacco mosaic virus (TMV), RNA viruses, and polio virus. Supervised PhD students and post-doctoral researchers including Aaron Klug and Kenneth Holmes.</p>
+                </div>
+                
+                <div class="entry">
+                    <span class="date-range">1951 – 1953</span>
+                    <h3>Research Associate</h3>
+                    <h4>King's College London – MRC Biophysics Unit</h4>
+                    <p>Conducted X-ray diffraction studies of DNA fibres. Discovered the two forms of DNA (A and B). Produced Photo 51, the landmark X-ray diffraction image that provided key evidence for DNA's helical structure. Demonstrated that phosphate groups lie on the outside of the DNA molecule.</p>
+                </div>
+                
+                <div class="entry">
+                    <span class="date-range">1947 – 1950</span>
+                    <h3>Chercheur (Postdoctoral Researcher)</h3>
+                    <h4>Laboratoire Central des Services Chimiques de l'État, Paris</h4>
+                    <p>Trained under Jacques Mering in X-ray crystallography techniques applied to amorphous substances. Studied carbon structures and the transformation of coal to graphite. Coined the terms "graphitising" and "non-graphitising carbon".</p>
+                </div>
+                
+                <div class="entry">
+                    <span class="date-range">1942 – 1946</span>
+                    <h3>Assistant Research Officer</h3>
+                    <h4>British Coal Utilisation Research Association (BCURA)</h4>
+                    <p>Studied the porosity and microstructure of coal using helium density measurements. Developed methods to classify coals and predict their performance for fuel and gas mask production. Research contributed to wartime efforts.</p>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Key Achievements</h2>
+                <div class="achievements">
+                    <div class="achievement-card">
+                        <h4>Photo 51</h4>
+                        <p>Supervised the production of the famous X-ray diffraction photograph that provided crucial evidence for DNA's double helical structure.</p>
+                    </div>
+                    <div class="achievement-card">
+                        <h4>DNA Forms</h4>
+                        <p>First to discover and characterise the A and B forms of DNA, identifying critical structural parameters.</p>
+                    </div>
+                    <div class="achievement-card">
+                        <h4>TMV Structure</h4>
+                        <p>Determined that tobacco mosaic virus particles are uniform in length and that RNA is wound along the inner surface of the hollow virus.</p>
+                    </div>
+                    <div class="achievement-card">
+                        <h4>Carbon Science</h4>
+                        <p>Pioneered understanding of coal microstructure and coined terminology still used in carbon chemistry.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Selected Publications</h2>
+                
+                <div class="publication">
+                    <h4>Molecular Configuration in Sodium Thymonucleate (1953)</h4>
+                    <p>Franklin, R.E. &amp; Gosling, R.G. – <span class="journal">Nature</span>, 171, 740-741</p>
+                </div>
+                
+                <div class="publication">
+                    <h4>Evidence for 2-Chain Helix in Crystalline Structure of Sodium Deoxyribonucleate (1953)</h4>
+                    <p>Franklin, R.E. &amp; Gosling, R.G. – <span class="journal">Nature</span>, 172, 156-157</p>
+                </div>
+                
+                <div class="publication">
+                    <h4>Structure of Tobacco Mosaic Virus (1955)</h4>
+                    <p>Franklin, R.E. – <span class="journal">Nature</span>, 175, 379-381</p>
+                </div>
+                
+                <div class="publication">
+                    <h4>Location of the Ribonucleic Acid in the Tobacco Mosaic Virus Particle (1956)</h4>
+                    <p>Franklin, R.E. – <span class="journal">Nature</span>, 177, 928-930</p>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Technical Expertise</h2>
+                <div class="skills-grid">
+                    <span class="skill-tag">X-ray Crystallography</span>
+                    <span class="skill-tag">X-ray Diffraction</span>
+                    <span class="skill-tag">Physical Chemistry</span>
+                    <span class="skill-tag">Patterson Function Analysis</span>
+                    <span class="skill-tag">Molecular Structure Determination</span>
+                    <span class="skill-tag">Coal &amp; Carbon Chemistry</span>
+                    <span class="skill-tag">Virology</span>
+                    <span class="skill-tag">Microscopy</span>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Languages</h2>
+                <div class="languages">
+                    <div class="language-item">
+                        <span>English</span>
+                        <div class="language-level"><div class="fill" style="width: 100%"></div></div>
+                        <small>Native</small>
+                    </div>
+                    <div class="language-item">
+                        <span>French</span>
+                        <div class="language-level"><div class="fill" style="width: 95%"></div></div>
+                        <small>Fluent</small>
+                    </div>
+                    <div class="language-item">
+                        <span>German</span>
+                        <div class="language-level"><div class="fill" style="width: 60%"></div></div>
+                        <small>Proficient</small>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Honours &amp; Legacy</h2>
+                
+                <div class="entry">
+                    <p>• Turner &amp; Newall Research Fellowship (1950–1953)</p>
+                    <p>• Agricultural Research Council Senior Scientist grant (1954–1958)</p>
+                    <p>• U.S. National Institutes of Health grant – largest ever received at Birkbeck (1957)</p>
+                    <p>• Royal Society Rosalind Franklin Award established in her honour (2003)</p>
+                    <p>• Asteroid 9241 Rosfranklin named after her (1997)</p>
+                    <p>• Franklin–Wilkins Building at King's College London (2000)</p>
+                    <p>• Rosalind Franklin University of Medicine and Science, Chicago (2004)</p>
+                    <p>• English Heritage Blue Plaque, Drayton Gardens, London (1992)</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p class="quote">"Science and everyday life cannot and should not be separated."</p>
+            <p style="margin-top: 0.5rem;">— Rosalind Franklin, 1940</p>
+        </footer>
+    </div>
+</body>
+</html>

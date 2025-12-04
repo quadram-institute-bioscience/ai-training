@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rosalind Franklin – Curriculum Vitae</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --primary: #971313;   /* Tamarillo red */
+      --accent: #c7c7c7;    /* Silver */
+      --text: #000000;      /* Black */
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background-color: #ffffff;
+      line-height: 1.6;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    @media (min-width: 768px) {
+      .page {
+        padding: 2.5rem 1.5rem 4rem;
+      }
+    }
+
+    /* Top summary area */
+
+    .top-summary {
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 1rem;
+      padding: 1.5rem 1.5rem 1.75rem;
+      display: grid;
+      gap: 1.25rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+    }
+
+    @media (min-width: 768px) {
+      .top-summary {
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 3fr);
+        align-items: center;
+      }
+    }
+
+    .identity {
+      border-right: none;
+    }
+
+    @media (min-width: 768px) {
+      .identity {
+        border-right: 1px solid rgba(255, 255, 255, 0.36);
+        padding-right: 1.5rem;
+      }
+    }
+
+    .name {
+      font-size: clamp(1.9rem, 3vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin: 0 0 0.35rem;
+    }
+
+    .role {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.9;
+      margin-bottom: 0.9rem;
+    }
+
+    .meta-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0 0;
+      font-size: 0.9rem;
+    }
+
+    .meta-list li {
+      margin-bottom: 0.25rem;
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .meta-label {
+      opacity: 0.8;
+      font-weight: 500;
+      min-width: 3.2rem;
+    }
+
+    .summary-text {
+      font-size: 0.98rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.9rem;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      padding: 0.15rem 0.6rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+    }
+
+    /* Main content layout */
+
+    main {
+      margin-top: 2rem;
+    }
+
+    @media (min-width: 900px) {
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 3fr);
+        gap: 2rem;
+      }
+    }
+
+    section {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin: 0 0 0.4rem;
+    }
+
+    .section-bar {
+      height: 3px;
+      width: 3rem;
+      background: var(--primary);
+      margin-bottom: 0.9rem;
+    }
+
+    .subsection-title {
+      font-size: 0.96rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin: 1.1rem 0 0.15rem;
+    }
+
+    .subsection-subtitle {
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #555555;
+      margin-bottom: 0.3rem;
+    }
+
+    .timeline {
+      border-left: 2px solid var(--accent);
+      padding-left: 1rem;
+      margin-left: 0.3rem;
+    }
+
+    .timeline-item {
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -1.13rem;
+      top: 0.14rem;
+      width: 0.65rem;
+      height: 0.65rem;
+      border-radius: 50%;
+      background-color: #ffffff;
+      border: 2px solid var(--primary);
+    }
+
+    .timeline-role {
+      font-weight: 600;
+      font-size: 0.97rem;
+    }
+
+    .timeline-place {
+      font-size: 0.9rem;
+      color: #444444;
+    }
+
+    .timeline-date {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #555555;
+      margin-top: 0.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .list-compact {
+      padding-left: 1.1rem;
+      margin: 0.25rem 0 0.5rem;
+      font-size: 0.92rem;
+    }
+
+    .list-compact li {
+      margin-bottom: 0.25rem;
+    }
+
+    .key-facts {
+      border-radius: 0.8rem;
+      border: 1px solid var(--accent);
+      padding: 0.9rem 1rem;
+      font-size: 0.9rem;
+      background: #f8f8f8;
+    }
+
+    .key-facts ul {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0 0;
+    }
+
+    .key-facts li {
+      margin-bottom: 0.25rem;
+    }
+
+    .tagline {
+      font-style: italic;
+      font-size: 0.9rem;
+      margin: 0.3rem 0 0.4rem;
+    }
+
+    hr.soft {
+      border: none;
+      border-top: 1px solid var(--accent);
+      margin: 1.5rem 0 1.1rem;
+    }
+
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      padding: 0.15rem 0.6rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-right: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Small helper for muted text */
+
+    .muted {
+      color: #555555;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- TOP SUMMARY -->
+    <header class="top-summary">
+      <div class="identity">
+        <h1 class="name">Rosalind Franklin</h1>
+        <div class="role">
+          Chemist &amp; X-ray Crystallographer
+        </div>
+        <ul class="meta-list">
+          <li>
+            <span class="meta-label">Born</span>
+            <span>25 July 1920 – Notting Hill, London, England</span>
+          </li>
+          <li>
+            <span class="meta-label">Died</span>
+            <span>16 April 1958 – Chelsea, London, England</span>
+          </li>
+          <li>
+            <span class="meta-label">Fields</span>
+            <span>Physical Chemistry, X-ray Crystallography</span>
+          </li>
+          <li>
+            <span class="meta-label">Known for</span>
+            <span>Structure of DNA, RNA &amp; viruses; structure of coal &amp; graphite</span>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="summary-text">
+          English chemist and X-ray crystallographer whose experimental insight into
+          the molecular structure of DNA, RNA, viruses, coal and graphite helped
+          shape modern molecular biology and materials science. Her X-ray
+          diffraction data on DNA, including the image later known as “Photo 51”,
+          were pivotal for deducing the DNA double helix, although this role was
+          only widely recognised after her death.
+        </p>
+        <p class="summary-text">
+          Across a brief but exceptionally productive career she combined rigorous
+          physical chemistry with meticulous crystallography, moving from wartime
+          coal research to leading-edge studies of nucleic acids and viruses. She
+          died at the age of 37, but numerous institutions, awards and even a
+          European Mars rover now bear her name.
+        </p>
+        <div class="chips">
+          <span class="chip">DNA Structure</span>
+          <span class="chip">X-ray Diffraction</span>
+          <span class="chip">Structural Virology</span>
+          <span class="chip">Carbon Materials</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+      <!-- LEFT COLUMN: EDUCATION / POSITIONS -->
+      <div>
+        <!-- Education -->
+        <section>
+          <h2 class="section-title">Education</h2>
+          <div class="section-bar"></div>
+
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-role">
+                PhD in Physical Chemistry
+              </div>
+              <div class="timeline-place">
+                University of Cambridge (Newnham College), UK
+              </div>
+              <div class="timeline-date">
+                1942 – 1945
+              </div>
+              <ul class="list-compact">
+                <li>Doctoral thesis: <em>The physical chemistry of solid organic colloids with special reference to coal</em>.</li>
+                <li>Research on the microstructure and porosity of coal, informing wartime fuel technology.</li>
+              </ul>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-role">
+                BA / Natural Sciences Tripos (Chemistry)
+              </div>
+              <div class="timeline-place">
+                Newnham College, University of Cambridge, UK
+              </div>
+              <div class="timeline-date">
+                1938 – 1941
+              </div>
+              <ul class="list-compact">
+                <li>Specialised in chemistry within the Natural Sciences Tripos.</li>
+                <li>Awarded second-class honours, accepted at the time as a degree-level qualification for employment.</li>
+              </ul>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-role">
+                Schooling
+              </div>
+              <div class="timeline-place">
+                St Paul’s Girls’ School, London, UK
+              </div>
+              <div class="timeline-date">
+                1930s
+              </div>
+              <ul class="list-compact">
+                <li>Excelled in science, Latin and modern languages; gained early exposure to physics and chemistry.</li>
+                <li>Developed an interest in quantitative problem-solving and experimental work.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Positions -->
+        <section>
+          <h2 class="section-title">Research Positions</h2>
+          <div class="section-bar"></div>
+
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-role">Research Leader, Virus Structure Group</div>
+              <div class="timeline-place">Birkbeck College, University of London, UK</div>
+              <div class="timeline-date">1953 – 1958</div>
+              <ul class="list-compact">
+                <li>Led pioneering work on the structures of RNA viruses, especially tobacco mosaic virus and poliovirus.</li>
+                <li>Applied X-ray diffraction methods to understand virus symmetry and assembly.</li>
+              </ul>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-role">Research Associate, Biophysics Unit</div>
+              <div class="timeline-place">King’s College London, UK</div>
+              <div class="timeline-date">1951 – 1953</div>
+              <ul class="list-compact">
+                <li>Generated high-resolution X-ray diffraction patterns of DNA fibres, clarifying A- and B-form DNA.</li>
+                <li>Produced Photo 51, an exceptionally clear diffraction image essential for deducing the DNA double helix.</li>
+              </ul>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-role">Postdoctoral Researcher (Chercheur)</div>
+              <div class="timeline-place">Laboratoire Central des Services Chimiques de l'État, Paris, France</div>
+              <div class="timeline-date">1947 – 1950</div>
+              <ul class="list-compact">
+                <li>Worked with Jacques Mering on X-ray analysis of carbon and coal-derived materials.</li>
+                <li>Established expertise in crystallographic methods and the fine structure of disordered solids.</li>
+              </ul>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-role">Assistant Research Officer</div>
+              <div class="timeline-place">British Coal Utilisation Research Association (BCURA), UK</div>
+              <div class="timeline-date">1942 – 1947</div>
+              <ul class="list-compact">
+                <li>Investigated the microstructure and thermal properties of coal for wartime energy applications.</li>
+                <li>Work formed the basis of her PhD and contributed to improved understanding of carbon materials.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Areas of expertise -->
+        <section>
+          <h2 class="section-title">Areas of Expertise</h2>
+          <div class="section-bar"></div>
+          <div>
+            <span class="pill">X-ray diffraction &amp; crystallography</span>
+            <span class="pill">Nucleic acid structure</span>
+            <span class="pill">Structural virology</span>
+            <span class="pill">Coal &amp; graphite microstructure</span>
+            <span class="pill">Physical chemistry</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN: CONTRIBUTIONS / PUBLICATIONS / LEGACY -->
+      <div>
+        <!-- Key Scientific Contributions -->
+        <section>
+          <h2 class="section-title">Key Scientific Contributions</h2>
+          <div class="section-bar"></div>
+
+          <h3 class="subsection-title">DNA Structure &amp; Photo 51</h3>
+          <div class="subsection-subtitle">King’s College London – DNA fibres and diffraction</div>
+          <p class="muted tagline">
+            Quantitative, carefully interpreted experimental data underpinned later models of the DNA double helix.
+          </p>
+          <ul class="list-compact">
+            <li>Produced X-ray diffraction patterns of highly ordered DNA fibres, distinguishing between A- and B-form DNA.</li>
+            <li>Captured Photo 51, a B-form DNA diffraction image that revealed a clear helical signature and key parameters such as the pitch and radius of the helix.</li>
+            <li>Showed, through systematic analysis, that the phosphate backbone must lie on the outside of the DNA molecule.</li>
+          </ul>
+
+          <h3 class="subsection-title">Coal, Carbon &amp; Graphite</h3>
+          <div class="subsection-subtitle">BCURA &amp; Paris – Physical chemistry of disordered solids</div>
+          <ul class="list-compact">
+            <li>Defined structural classes of coal based on porosity and response to heat, informing industrial use and carbonisation processes.</li>
+            <li>Clarified the transition from amorphous carbon in coal to more ordered forms approaching graphite.</li>
+            <li>Helped establish X-ray diffraction as a powerful tool for characterising complex, partially ordered materials.</li>
+          </ul>
+
+          <h3 class="subsection-title">Structures of Viruses</h3>
+          <div class="subsection-subtitle">Birkbeck College – RNA viruses</div>
+          <ul class="list-compact">
+            <li>Led structural studies of tobacco mosaic virus, demonstrating how identical protein subunits assemble around an RNA core.</li>
+            <li>Extended approaches to other plant viruses and to poliovirus, contributing to early understanding of virus symmetry and organisation.</li>
+            <li>Laid groundwork for later high-resolution models of viral particles and their life cycles.</li>
+          </ul>
+        </section>
+
+        <hr class="soft" />
+
+        <!-- Selected Publications (representative) -->
+        <section>
+          <h2 class="section-title">Selected Publications (Representative)</h2>
+          <div class="section-bar"></div>
+          <p class="muted">
+            Titles below are representative of her major themes (coal and carbons, nucleic acids, and viruses) rather than an exhaustive list.
+          </p>
+
+          <ul class="list-compact">
+            <li>
+              Studies on the physical chemistry and microstructure of coal and carbonised materials, establishing categories of coal based on porosity and thermal behaviour.
+            </li>
+            <li>
+              Articles on the X-ray diffraction of DNA fibres, clarifying the helical nature of DNA and constraining possible structural models.
+            </li>
+            <li>
+              Papers on the X-ray analysis of tobacco mosaic virus and related plant viruses, illuminating how identical protein subunits assemble into rod-like particles.
+            </li>
+          </ul>
+        </section>
+
+        <hr class="soft" />
+
+        <!-- Honours & Legacy -->
+        <section>
+          <h2 class="section-title">Honours &amp; Legacy</h2>
+          <div class="section-bar"></div>
+
+          <div class="key-facts">
+            <strong>Posthumous recognition</strong>
+            <ul>
+              <li>Recognition of her central role in the discovery of the DNA double helix grew substantially after the 1962 Nobel Prize awarded to Crick, Watson and Wilkins.</li>
+              <li>Numerous buildings, university programmes and awards have been named in her honour, including prizes for women in science.</li>
+              <li>The European Mars rover of the ExoMars mission was named <em>Rosalind Franklin</em>, reflecting her enduring scientific legacy.</li>
+            </ul>
+          </div>
+
+          <h3 class="subsection-title">Scientific Legacy</h3>
+          <ul class="list-compact">
+            <li>Her work set methodological standards for careful experimental design, data quality and conservative structural interpretation.</li>
+            <li>Serves as a symbol of the importance of recognition, collaboration and ethics in scientific discovery.</li>
+            <li>Frequently cited as a role model and inspiration for women pursuing careers in physics, chemistry and biology.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="section-title">Personal Profile</h2>
+          <div class="section-bar"></div>
+          <p class="muted">
+            Franklin was known for her intellectual independence, exacting scientific standards and direct communication style. Fluent in French and comfortable working
+            across cultures, she combined theoretical understanding with experimental craftsmanship and maintained a strong sense of public duty, from wartime research to
+            mentoring younger scientists.
+          </p>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
