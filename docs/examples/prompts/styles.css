@@ -19,14 +19,18 @@ body, html {
 #content-wrapper {
   flex: 1;
   overflow: hidden;
+  display: flex;
+  width: 100%;
 }
 
 /* Sidebar Styles */
 #sidebar {
   width: 280px;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 #promptListContainer {
@@ -78,6 +82,8 @@ body, html {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 }
 
 .editor-toolbar {
@@ -130,6 +136,9 @@ body, html {
   line-height: 1.6;
   outline: none;
   box-shadow: none !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 #editor:focus {
@@ -195,6 +204,9 @@ body, html {
   font-size: 14px;
   line-height: 1.6;
   padding: 10px;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 .EasyMDEContainer .editor-toolbar {
