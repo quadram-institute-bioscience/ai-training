@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Count</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABdGlDQ1BpY2MAACiRdZG7SwNBEIc/oxLxQQQtLCwO8dFoiBGCNoIJooKIxAi+muTyEpJ43CVIsBVsAwqija9C/wJtBWtBUBRBrLVVtNFwzuWEBDGzzM63v90ZdmfBEUqpaaPOA+lMVg9O+JWFxSXF+YqTVhrowx1WDW1sdnaaqvZ5T40VbwesWtXP/WtN0ZihQk2D8Kiq6VnhSeHp9axm8Y5wu5oMR4XPhPt1uaDwnaVHbH6xOGHzt8V6KBgAR6uwkqjgSAWrST0tLC+nO53Kqb/3sV7SHMvMz0nsEu/EIMgEfhSmGCeAj0FGZPYxgBe3rKiS7ynlz7AmuarMGnl0VkmQJEu/qDmpHpMYFz0mI0Xe6v/fvhrxIa9dvdkP9c+m+d4Dzm0oFkzz68g0i8dQ+wSXmXL+2iEMf4heKGvdB+DahPOrshbZhYst6HjUwnq4JNWKO+JxeDuFlkVou4HGZbtnv/ucPEBoQ77qGvb2oVfOu1Z+AH2RZ/BzaL26AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAFBUExURQAAAAICAAECAAEBAC4wAHN4AIuQAI+UAI6UAIeMAGNnABgZAAABAG1xANTcAN7mAOXuAOTtANvkAMTMAD1AAE1QANrjAM/XAK20AGRoAF5hAFxgAHR4AMHIANPbAMXNABobAKKpANbeALW8ABUWAENGAMvTANjgAGltAAMDAA8PALvCAHh9AAYGAAMEAAQEAKyyAI2TABMUAL7GAGhtAJ6lAN3mAJKYAJ+lAJKXAGhsAJ2jABITAL3FAGxxAAUFAGtvANniAFtfAJ6kAN7nAJCWALG4AJedAJyjAM7WAG5zAAIDAHp/ANriAMrSAA4OABkaAKyzAMfPAMfOACEiANvjAMbOAMLKANHZAMzUAIOIAM3VANDYAJmfAJacANfgANjhAA4PACMkACQmACUnABwdAIqPANTdANPcAHl+AP///32eS0sAAAABYktHRGolYpUOAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH6QgFCgcrFFuxSAAAAOBJREFUGNNjYGBgYGSAAiYIxczAwsrGzsHJxQ1kAgEPAy8fv4CgoKCQsAhIhJFBVExcQlJKWkZWTl4BrEZRSVmFgZmRQVVNXYNBk4FBS1tMh0FXU49Z30DIEGSBkbGYCUiCkcHUzBxkEVQAKGVhZglVYQUU0GdhsOYHq7CxFbNjsGdwcHRydnEFqbB3U3cHus5DyVPe0Quo1JvBx9fPTsU/IFAtKDgEqIKZwcYtVClM1jacLyLSAaSFmUElyjY6JsIzNi4+gRfsOWaGxKTklFRmxrT0jEywCMT/zMyarjERAH7/HgDha5sqAAAAJnRFWHRpY2M6Y29weXJpZ2h0AE5vIGNvcHlyaWdodCwgdXNlIGZyZWVseaea8IIAAAAhdEVYdGljYzpkZXNjcmlwdGlvbgBzUkdCIElFQzYxOTY2LTIuMVet2kcAAAAASUVORK5CYII=">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+        :root {
+            --antiflash-white: #F0F1F1;
+            --pine-green: #097E74;
+            --pine-green-dark: #075d56;
+            --apple-green: #B6BE00;
+            --charcoal: #2F3D46;
+            --sidebar-bg: #e8eaea;
+            --sidebar-header-bg: #dde0e0;
+            --border-color: #d1d1d1;
+            --danger: #E36f6f;
+            --danger-hover: #b71c1c;
+            --sidebar-w: 240px;
+            --outline-w: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            background: var(--antiflash-white);
+            /* Two-column only: sidebar + editor. Outline is a floating drawer. */
+            display: grid;
+            grid-template-columns: var(--sidebar-w) 1fr;
+            grid-template-rows: 1fr;
+            color: var(--charcoal);
+            overflow: hidden;
+        }
+
+        /* ── Left Sidebar ── */
+        .sidebar {
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--sidebar-header-bg);
+        }
+        .sidebar-header h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--pine-green);
+        }
+        .new-document-btn {
+            width: 100%;
+            padding: 8px 16px;
+            margin-top: 12px;
+            background: var(--pine-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .new-document-btn:hover { background: var(--pine-green-dark); }
+
+        .document-list { flex: 1; overflow-y: auto; }
+
+        .document-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .document-item:hover { background: #d1d1d1; }
+        .document-item.active { background: var(--apple-green); }
+
+        .document-title-label {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .document-meta { font-size: 11px; opacity: 0.6; }
+        .document-actions { margin-top: 6px; }
+
+        .delete-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .delete-btn:hover { background: var(--danger-hover); }
+
+        /* ── Main Editor Panel ── */
+        .main-panel {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .document-title-input {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            padding: 18px 24px 10px;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--pine-green);
+        }
+
+        /* EasyMDE overrides */
+        .editor-wrap { flex: 1; overflow: auto; padding: 0 24px 80px; }
+        .editor-wrap .EasyMDEContainer { border: none; }
+        .editor-wrap .EasyMDEContainer .CodeMirror {
+            border: none;
+            font-family: 'IBM Plex Mono', 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--charcoal);
+            min-height: 300px;
+            padding: 0;
+        }
+        .editor-wrap .editor-toolbar {
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafafa;
+            opacity: 1;
+        }
+        .editor-wrap .editor-toolbar button.active,
+        .editor-wrap .editor-toolbar button:hover {
+            background: var(--apple-green);
+            border-color: transparent;
+        }
+        .editor-wrap .editor-statusbar { display: none; }
+
+        /* Placeholder */
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+        }
+        .placeholder h3 { font-size: 22px; margin-bottom: 8px; color: var(--pine-green); }
+
+        /* ── Right Outline Panel (slide-in drawer) ── */
+        .outline-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: var(--outline-w);
+            background: var(--sidebar-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            z-index: 50;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+        }
+        .outline-panel.open {
+            transform: translateX(0);
+        }
+        .outline-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--sidebar-header-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .outline-header h2 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--pine-green);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .outline-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--charcoal);
+            opacity: 0.5;
+            transition: opacity 0.15s;
+            line-height: 1;
+            padding: 2px 6px;
+        }
+        .outline-close-btn:hover { opacity: 1; }
+
+        .outline-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+
+        .outline-item {
+            padding: 7px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .outline-item-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--charcoal);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+        .outline-item-count {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--pine-green);
+            white-space: nowrap;
+        }
+        .outline-empty {
+            padding: 16px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* ── Toggle button (pinned top-right of editor) ── */
+        .outline-toggle {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 60;
+            background: var(--pine-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, right 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .outline-toggle:hover { background: var(--pine-green-dark); }
+        .outline-toggle .toggle-icon {
+            font-size: 13px;
+            transition: transform 0.25s ease;
+        }
+        /* When panel is open, move toggle button left of the panel */
+        .outline-toggle.panel-open {
+            right: calc(var(--outline-w) + 12px);
+        }
+        .outline-toggle.panel-open .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* ── Footer ── */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: var(--sidebar-w);
+            right: 0;
+            height: 52px;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            z-index: 40;
+        }
+        .stat { display: flex; flex-direction: column; align-items: center; }
+        .stat-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--pine-green);
+        }
+        .stat-label { font-size: 11px; opacity: 0.6; }
+
+        /* ── Delete Confirmation Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.35);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.15s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 28px 32px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-box h3 { font-size: 17px; margin-bottom: 10px; color: var(--charcoal); }
+        .modal-box p { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-actions button {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-cancel { background: #e0e0e0; color: var(--charcoal); }
+        .btn-cancel:hover { background: #ccc; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: var(--danger-hover); }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            body { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .footer { left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>📃 Documents <span style="color: var(--apple-green)">Word Count</span></h2>
+            <button class="new-document-btn" id="newDocBtn">New Document</button>
+        </div>
+        <div class="document-list" id="documentList"></div>
+    </div>
+
+    <!-- Main Editor Panel -->
+    <div class="main-panel" id="mainPanel">
+        <div class="placeholder">
+            <h3>Select a document</h3>
+            <p>Choose a document from the sidebar or create a new one</p>
+        </div>
+    </div>
+
+    <!-- Toggle button for sections panel -->
+    <button class="outline-toggle" id="outlineToggle" title="Toggle section word counts">
+        <span class="toggle-icon">◀</span> Sections
+    </button>
+
+    <!-- Right Outline Panel (slide-in drawer, hidden by default) -->
+    <div class="outline-panel" id="outlinePanel">
+        <div class="outline-header">
+            <h2>§ Sections</h2>
+            <button class="outline-close-btn" id="outlineCloseBtn" title="Close">✕</button>
+        </div>
+        <div class="outline-list" id="outlineList">
+            <div class="outline-empty">Open a document to see its <code>## H2</code> section word counts.</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer" id="footer" style="display: none;">
+        <div class="stat">
+            <div class="stat-value" id="charCount">0</div>
+            <div class="stat-label">Characters</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="wordCount">0</div>
+            <div class="stat-label">Words</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="lineCount">0</div>
+            <div class="stat-label">Lines</div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal" style="display:none;">
+        <div class="modal-box">
+            <h3>Delete document?</h3>
+            <p id="deleteModalMsg">This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="deleteCancelBtn">Cancel</button>
+                <button class="btn-danger" id="deleteConfirmBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script>
+    (() => {
+        // ── Utilities ──
+
+        /** Count words (unicode-aware) */
+        function countWords(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return 0;
+            const matches = trimmed.match(/[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu);
+            return matches ? matches.length : 0;
+        }
+
+        /** Escape HTML to prevent XSS */
+        function esc(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        /** Debounce helper */
+        function debounce(fn, ms) {
+            let timer;
+            return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+        }
+
+        /** Parse text into H2 sections with word counts */
+        function parseSections(text) {
+            const lines = text.split('\n');
+            const sections = [];
+            let currentTitle = null;
+            let currentLines = [];
+
+            for (const line of lines) {
+                if (line.startsWith('## ')) {
+                    // Push previous section
+                    if (currentTitle !== null) {
+                        sections.push({ title: currentTitle, words: countWords(currentLines.join('\n')) });
+                    }
+                    currentTitle = line.slice(3).trim();
+                    currentLines = [];
+                } else if (currentTitle !== null) {
+                    currentLines.push(line);
+                }
+            }
+            // Push final section
+            if (currentTitle !== null) {
+                sections.push({ title: currentTitle, words: countWords(currentLines.join('\n')) });
+            }
+            return sections;
+        }
+
+        // ── Storage Layer (debounced persistence) ──
+
+        const Storage = {
+            _docs: null,
+
+            load() {
+                if (this._docs) return this._docs;
+                try {
+                    const raw = localStorage.getItem('wordcount_documents');
+                    this._docs = raw ? JSON.parse(raw) : [];
+                } catch { this._docs = []; }
+                return this._docs;
+            },
+
+            _flush() {
+                localStorage.setItem('wordcount_documents', JSON.stringify(this._docs));
+            },
+
+            // Debounced: waits 500ms after last call before writing
+            save: null,
+
+            // Immediate save for destructive actions
+            saveNow() { this._flush(); },
+        };
+        Storage.save = debounce(() => Storage._flush(), 500);
+
+        // ── Document CRUD ──
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function createDocument(title = '', text = '') {
+            const docs = Storage.load();
+            const now = new Date().toISOString();
+            const doc = { id: generateId(), title: title || 'Untitled Document', text, dateAdded: now, dateLastEdited: now };
+            docs.unshift(doc);
+            Storage.save();
+            return doc;
+        }
+
+        function updateDocument(id, updates) {
+            const docs = Storage.load();
+            const idx = docs.findIndex(d => d.id === id);
+            if (idx === -1) return null;
+            Object.assign(docs[idx], updates, { dateLastEdited: new Date().toISOString() });
+            Storage.save();
+            return docs[idx];
+        }
+
+        function deleteDocument(id) {
+            const docs = Storage.load();
+            const idx = docs.findIndex(d => d.id === id);
+            if (idx !== -1) docs.splice(idx, 1);
+            Storage.saveNow();
+        }
+
+        // ── UI State ──
+
+        let currentDocId = null;
+        let easyMDE = null;
+
+        // ── Outline Panel Toggle ──
+
+        const outlinePanel = document.getElementById('outlinePanel');
+        const outlineToggle = document.getElementById('outlineToggle');
+        const outlineCloseBtn = document.getElementById('outlineCloseBtn');
+
+        function openOutline() {
+            outlinePanel.classList.add('open');
+            outlineToggle.classList.add('panel-open');
+        }
+        function closeOutline() {
+            outlinePanel.classList.remove('open');
+            outlineToggle.classList.remove('panel-open');
+        }
+        function toggleOutline() {
+            outlinePanel.classList.contains('open') ? closeOutline() : openOutline();
+        }
+
+        outlineToggle.addEventListener('click', toggleOutline);
+        outlineCloseBtn.addEventListener('click', closeOutline);
+
+        // ── Sidebar Rendering ──
+
+        const docListEl = document.getElementById('documentList');
+
+        function renderDocumentList() {
+            const docs = Storage.load();
+            docListEl.innerHTML = '';
+            for (const doc of docs) docListEl.appendChild(createDocListItem(doc));
+        }
+
+        function createDocListItem(doc) {
+            const item = document.createElement('div');
+            item.className = 'document-item';
+            item.dataset.id = doc.id;
+            if (doc.id === currentDocId) item.classList.add('active');
+
+            const date = new Date(doc.dateLastEdited).toLocaleDateString();
+            item.innerHTML = `
+                <div class="document-title-label">${esc(doc.title)}</div>
+                <div class="document-meta">Modified: ${date}</div>
+                <div class="document-actions">
+                    <button class="delete-btn" data-delete-id="${esc(doc.id)}">Delete</button>
+                </div>
+            `;
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.delete-btn')) return;
+                loadDocument(doc.id);
+            });
+            return item;
+        }
+
+        function refreshSidebarActiveState() {
+            docListEl.querySelectorAll('.document-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.id === currentDocId);
+            });
+        }
+
+        /** Patch a single sidebar item's title + date without full re-render */
+        function updateSidebarItem(id) {
+            const docs = Storage.load();
+            const doc = docs.find(d => d.id === id);
+            if (!doc) return;
+            const item = docListEl.querySelector(`[data-id="${id}"]`);
+            if (!item) return;
+            const titleEl = item.querySelector('.document-title-label');
+            const metaEl = item.querySelector('.document-meta');
+            if (titleEl) titleEl.textContent = doc.title;
+            if (metaEl) metaEl.textContent = 'Modified: ' + new Date(doc.dateLastEdited).toLocaleDateString();
+        }
+
+        // ── Delete Confirmation Modal ──
+
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteModalMsg = document.getElementById('deleteModalMsg');
+        const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+        const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
+        let pendingDeleteId = null;
+
+        function showDeleteModal(id) {
+            const docs = Storage.load();
+            const doc = docs.find(d => d.id === id);
+            pendingDeleteId = id;
+            deleteModalMsg.textContent = doc
+                ? `Delete "${doc.title}"? This cannot be undone.`
+                : 'Delete this document? This cannot be undone.';
+            deleteModal.style.display = 'flex';
+        }
+        function hideDeleteModal() { deleteModal.style.display = 'none'; pendingDeleteId = null; }
+
+        deleteCancelBtn.addEventListener('click', hideDeleteModal);
+        deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) hideDeleteModal(); });
+        deleteConfirmBtn.addEventListener('click', () => {
+            if (!pendingDeleteId) return;
+            const wasCurrentDoc = (pendingDeleteId === currentDocId);
+            deleteDocument(pendingDeleteId);
+            // Remove sidebar item directly
+            const item = docListEl.querySelector(`[data-id="${pendingDeleteId}"]`);
+            if (item) item.remove();
+            if (wasCurrentDoc) {
+                currentDocId = null;
+                destroyEditor();
+                showPlaceholder();
+                updateOutline('');
+            }
+            hideDeleteModal();
+        });
+
+        // Delegate delete button clicks from sidebar
+        docListEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-btn');
+            if (btn) { e.stopPropagation(); showDeleteModal(btn.dataset.deleteId); }
+        });
+
+        // ── Editor ──
+
+        const mainPanel = document.getElementById('mainPanel');
+        const footer = document.getElementById('footer');
+
+        function destroyEditor() {
+            if (easyMDE) { easyMDE.toTextArea(); easyMDE = null; }
+        }
+
+        function showPlaceholder() {
+            mainPanel.innerHTML = `
+                <div class="placeholder">
+                    <h3>Select a document</h3>
+                    <p>Choose a document from the sidebar or create a new one</p>
+                </div>
+            `;
+            footer.style.display = 'none';
+        }
+
+        function loadDocument(id) {
+            const docs = Storage.load();
+            const doc = docs.find(d => d.id === id);
+            if (!doc) return;
+
+            destroyEditor();
+            currentDocId = id;
+
+            mainPanel.innerHTML = `
+                <input class="document-title-input" placeholder="Document Title" value="${esc(doc.title)}" />
+                <div class="editor-wrap"><textarea id="mdEditor"></textarea></div>
+            `;
+            footer.style.display = 'flex';
+
+            // Title input
+            const titleInput = mainPanel.querySelector('.document-title-input');
+            titleInput.addEventListener('input', () => {
+                const val = titleInput.value.trim() || 'Untitled Document';
+                updateDocument(id, { title: val });
+                updateSidebarItem(id);
+            });
+
+            // EasyMDE
+            easyMDE = new EasyMDE({
+                element: document.getElementById('mdEditor'),
+                initialValue: doc.text,
+                spellChecker: false,
+                status: false,
+                autofocus: true,
+                placeholder: 'Start writing…\n\nUse ## Heading to create sections.',
+                toolbar: ['bold', 'italic', 'heading-2', '|', 'unordered-list', 'ordered-list', '|', 'link', 'quote', '|', 'preview', 'guide'],
+            });
+
+            // On change: update stats + outline, debounced save
+            easyMDE.codemirror.on('change', () => {
+                const text = easyMDE.value();
+                updateDocument(id, { text });
+                updateStats(text);
+                updateOutline(text);
+            });
+
+            updateStats(doc.text);
+            updateOutline(doc.text);
+            refreshSidebarActiveState();
+        }
+
+        // ── Stats Footer ──
+
+        const charCountEl = document.getElementById('charCount');
+        const wordCountEl = document.getElementById('wordCount');
+        const lineCountEl = document.getElementById('lineCount');
+
+        function updateStats(text) {
+            charCountEl.textContent = text.length.toLocaleString();
+            wordCountEl.textContent = countWords(text).toLocaleString();
+            lineCountEl.textContent = text.split('\n').length.toLocaleString();
+        }
+
+        // ── Outline Panel Content ──
+
+        const outlineList = document.getElementById('outlineList');
+
+        function updateOutline(text) {
+            const sections = parseSections(text);
+            if (sections.length === 0) {
+                outlineList.innerHTML = '<div class="outline-empty">No <code>## H2</code> sections found.<br>Add <code>## Section Title</code> to see per-section word counts.</div>';
+                return;
+            }
+            let html = '';
+            for (const s of sections) {
+                html += `<div class="outline-item">
+                    <span class="outline-item-title">${esc(s.title)}</span>
+                    <span class="outline-item-count">${s.words.toLocaleString()} w</span>
+                </div>`;
+            }
+            outlineList.innerHTML = html;
+        }
+
+        // ── Init ──
+
+        document.getElementById('newDocBtn').addEventListener('click', () => {
+            const doc = createDocument();
+            renderDocumentList();
+            loadDocument(doc.id);
+        });
+
+        Storage.load();
+        const docs = Storage.load();
+        if (docs.length === 0) {
+            createDocument('Welcome', '# Welcome to Word Count\n\nThis is your first document. Start typing to see the word, character, and line counts update in real-time.\n\n## Getting Started\n\nYour documents are automatically saved in your browser. Use `## Heading` to create sections — their individual word counts appear in the right panel.\n\n## Tips\n\nThe editor supports Markdown formatting. Try **bold**, *italic*, and lists. Each `## ` heading starts a new counted section.');
+        }
+        renderDocumentList();
+    })();
+    </script>
+</body>
+</html>

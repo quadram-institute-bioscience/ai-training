@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QIB Grant Acknowledgements Generator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        h1 { color: #1a5f7a; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        
+        /* Grant selection area */
+        .grants-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grant-section {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 6px;
+            border-left: 4px solid #1a5f7a;
+        }
+        .grant-section:last-child { margin-bottom: 0; }
+        
+        /* Main grant checkbox styling */
+        .main-grant {
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        .main-grant label { cursor: pointer; }
+        .grant-code { color: #666; font-weight: normal; font-size: 0.85em; }
+        
+        /* Sub-grants (themes) */
+        .sub-grants {
+            margin-left: 24px;
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 4px;
+        }
+        .sub-grants label {
+            font-size: 0.85em;
+            color: #555;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        .sub-grants input { margin-top: 3px; }
+        
+        /* Partner projects */
+        .partners {
+            margin-left: 24px;
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+        }
+        .partners label {
+            font-size: 0.85em;
+            color: #555;
+            cursor: pointer;
+        }
+        
+        /* Output area */
+        .output-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .output-container h2 { 
+            margin-top: 0; 
+            color: #1a5f7a;
+            font-size: 1.1em;
+        }
+        #acknowledgement {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 80px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        .placeholder { color: #999; font-style: italic; }
+        
+        /* Copy button */
+        .btn-copy {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #1a5f7a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn-copy:hover { background: #145a6e; }
+        .btn-copy:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-copy.copied { background: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>QIB Grant Acknowledgements</h1>
+    <p class="subtitle">Select grants to generate acknowledgement text (April 2023 – March 2028 ISPs)</p>
+
+    <div class="grants-container">
+        <!-- Food Microbiome & Health ISP -->
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" id="fmh-main" data-grant="fmh">
+                    Food Microbiome &amp; Health ISP <span class="grant-code">(BB/X011054/1)</span>
+                </label>
+            </div>
+            <div class="sub-grants">
+                <label><input type="checkbox" data-parent="fmh" data-theme="BBS/E/QU/230001A"> Theme 1: Nutrient bioavailability</label>
+                <label><input type="checkbox" data-parent="fmh" data-theme="BBS/E/QU/230001B"> Theme 2: GI microbiome impact</label>
+                <label><input type="checkbox" data-parent="fmh" data-theme="BBS/E/QU/230001C"> Theme 3: Host responses</label>
+                <label><input type="checkbox" data-parent="fmh" data-theme="BBS/E/QU/230001D"> Theme 4: Food/microbiome trials</label>
+            </div>
+            <div class="partners">
+                <label><input type="checkbox" data-parent="fmh" data-partner="BB/X018857/1"> Imperial</label>
+                <label><input type="checkbox" data-parent="fmh" data-partner="BB/X01889X/1"> UEA</label>
+                <label><input type="checkbox" data-parent="fmh" data-partner="BB/X020029/1"> Surrey</label>
+            </div>
+        </div>
+
+        <!-- Microbes and Food Safety ISP -->
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" id="mfs-main" data-grant="mfs">
+                    Microbes and Food Safety ISP <span class="grant-code">(BB/X011011/1)</span>
+                </label>
+            </div>
+            <div class="sub-grants">
+                <label><input type="checkbox" data-parent="mfs" data-theme="BBS/E/QU/230002A"> Theme 1: Microbial threats</label>
+                <label><input type="checkbox" data-parent="mfs" data-theme="BBS/E/QU/230002B"> Theme 2: Microbial survival</label>
+                <label><input type="checkbox" data-parent="mfs" data-theme="BBS/E/QU/230002C"> Theme 3: Flexible capabilities</label>
+            </div>
+            <div class="partners">
+                <label><input type="checkbox" data-parent="mfs" data-partner="BB/X018814/1"> Cambridge</label>
+                <label><input type="checkbox" data-parent="mfs" data-partner="BB/X018873/1"> Oxford Brookes</label>
+                <label><input type="checkbox" data-parent="mfs" data-partner="BB/Y003012/1"> RVC</label>
+            </div>
+        </div>
+
+        <!-- Other ISPs -->
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" data-grant="dsw" data-code="BB/X011003/1" data-project="BBS/E/QU/230003A">
+                    Delivering Sustainable Wheat <span class="grant-code">(BB/X011003/1)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" data-grant="cg" data-code="BB/X011070/1" data-project="BBS/E/QU/230004A">
+                    Cellular Genomics <span class="grant-code">(BB/X011070/1)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" data-grant="db" data-code="BB/X011089/1" data-project="BBS/E/QU/230005A">
+                    Decoding Biodiversity <span class="grant-code">(BB/X011089/1)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" data-grant="fnri" data-code="BB/CCG2260/1" data-project="BBS/E/QU/23NB0006">
+                    Food &amp; Nutrition National Bioscience Research Infrastructure <span class="grant-code">(BB/CCG2260/1)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" data-grant="ccg" data-code="BB/CCG2260/1">
+                    Core Capability Grant <span class="grant-code">(BB/CCG2260/1)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="grant-section">
+            <div class="main-grant">
+                <label>
+                    <input type="checkbox" data-grant="climb">
+                    MRC CLIMB BIG DATA <span class="grant-code">(MR/T030062/1)</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-container">
+        <h2>Generated Acknowledgement</h2>
+        <div id="acknowledgement">
+            <span class="placeholder">Select one or more grants above to generate acknowledgement text.</span>
+        </div>
+        <button class="btn-copy" id="copyBtn" disabled>Copy to Clipboard</button>
+    </div>
+
+    <script>
+        // Grant definitions with full text templates
+        const grants = {
+            fmh: {
+                name: 'Food Microbiome and Health',
+                code: 'BB/X011054/1',
+                baseText: 'the BBSRC Institute Strategic Programme Food Microbiome and Health BB/X011054/1'
+            },
+            mfs: {
+                name: 'Microbes and Food Safety',
+                code: 'BB/X011011/1',
+                baseText: 'the BBSRC Institute Strategic Programme Microbes and Food Safety BB/X011011/1'
+            },
+            dsw: {
+                name: 'Delivering Sustainable Wheat',
+                code: 'BB/X011003/1',
+                project: 'BBS/E/QU/230003A',
+                fullText: 'the BBSRC Institute Strategic Programme Delivering Sustainable Wheat BB/X011003/1 and its constituent project BBS/E/QU/230003A'
+            },
+            cg: {
+                name: 'Cellular Genomics',
+                code: 'BB/X011070/1',
+                project: 'BBS/E/QU/230004A',
+                fullText: 'the BBSRC Institute Strategic Programme Cellular Genomics BB/X011070/1 and its constituent project BBS/E/QU/230004A'
+            },
+            db: {
+                name: 'Decoding Biodiversity',
+                code: 'BB/X011089/1',
+                project: 'BBS/E/QU/230005A',
+                fullText: 'the BBSRC Institute Strategic Programme Decoding Biodiversity BB/X011089/1 and its constituent project BBS/E/QU/230005A'
+            },
+            fnri: {
+                name: 'Food & Nutrition NBRI',
+                code: 'BB/CCG2260/1',
+                project: 'BBS/E/QU/23NB0006',
+                fullText: 'the BBSRC Core Capability Grant BB/CCG2260/1 and its constituent project BBS/E/QU/23NB0006 (Food & Nutrition National Bioscience Research Infrastructure)'
+            },
+            ccg: {
+                name: 'Core Capability Grant',
+                code: 'BB/CCG2260/1',
+                fullText: 'the BBSRC Core Capability Grant BB/CCG2260/1'
+            },
+            climb: {
+                name: 'MRC CLIMB BIG DATA',
+                code: 'MR/T030062/1',
+                fullText: 'MRC CLIMB BIG DATA grant MR/T030062/1'
+            }
+        };
+
+        // Get all checkboxes
+        const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+        const outputDiv = document.getElementById('acknowledgement');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // Auto-check parent when theme/partner selected
+        allCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const parent = this.dataset.parent;
+                if (parent && this.checked) {
+                    // Check parent grant if a sub-item is checked
+                    document.getElementById(`${parent}-main`).checked = true;
+                }
+                updateAcknowledgement();
+            });
+        });
+
+        // Generate acknowledgement text based on selections
+        function updateAcknowledgement() {
+            const parts = [];
+            
+            // Check FMH
+            const fmhMain = document.getElementById('fmh-main');
+            if (fmhMain.checked) {
+                const themes = [...document.querySelectorAll('[data-parent="fmh"][data-theme]:checked')]
+                    .map(cb => cb.dataset.theme);
+                const partners = [...document.querySelectorAll('[data-parent="fmh"][data-partner]:checked')]
+                    .map(cb => cb.dataset.partner);
+                
+                let text = grants.fmh.baseText;
+                if (themes.length > 0) {
+                    text += ` and its constituent project(s) ${themes.join(', ')}`;
+                }
+                if (partners.length > 0) {
+                    text += (themes.length > 0 ? '' : ' and its partner project(s)') + 
+                            (themes.length > 0 ? '; partner project(s) ' : ' ') + partners.join(', ');
+                }
+                parts.push(text);
+            }
+
+            // Check MFS
+            const mfsMain = document.getElementById('mfs-main');
+            if (mfsMain.checked) {
+                const themes = [...document.querySelectorAll('[data-parent="mfs"][data-theme]:checked')]
+                    .map(cb => cb.dataset.theme);
+                const partners = [...document.querySelectorAll('[data-parent="mfs"][data-partner]:checked')]
+                    .map(cb => cb.dataset.partner);
+                
+                let text = grants.mfs.baseText;
+                if (themes.length > 0) {
+                    text += ` and its constituent project(s) ${themes.join(', ')}`;
+                }
+                if (partners.length > 0) {
+                    text += (themes.length > 0 ? '' : ' and its partner project(s)') + 
+                            (themes.length > 0 ? '; partner project(s) ' : ' ') + partners.join(', ');
+                }
+                parts.push(text);
+            }
+
+            // Check other grants (simple ones)
+            ['dsw', 'cg', 'db', 'fnri', 'ccg', 'climb'].forEach(grantId => {
+                const cb = document.querySelector(`[data-grant="${grantId}"]`);
+                if (cb && cb.checked) {
+                    parts.push(grants[grantId].fullText);
+                }
+            });
+
+            // Build final text
+            if (parts.length === 0) {
+                outputDiv.innerHTML = '<span class="placeholder">Select one or more grants above to generate acknowledgement text.</span>';
+                copyBtn.disabled = true;
+            } else {
+                // Separate BBSRC and other funders
+                const bbsrcParts = parts.filter(p => !p.startsWith('MRC'));
+                const otherParts = parts.filter(p => p.startsWith('MRC'));
+                
+                let finalText = '';
+                if (bbsrcParts.length > 0) {
+                    finalText = 'The author(s) gratefully acknowledge the support of the Biotechnology and Biological Sciences Research Council (BBSRC); this research was funded by ' + bbsrcParts.join('; ') + '.';
+                }
+                if (otherParts.length > 0) {
+                    if (finalText) finalText += ' ';
+                    finalText += 'This research was also supported by ' + otherParts.join('; ') + '.';
+                }
+                
+                outputDiv.textContent = finalText;
+                copyBtn.disabled = false;
+            }
+        }
+
+        // Copy to clipboard
+        copyBtn.addEventListener('click', async function() {
+            const text = outputDiv.textContent;
+            try {
+                await navigator.clipboard.writeText(text);
+                this.textContent = 'Copied!';
+                this.classList.add('copied');
+                setTimeout(() => {
+                    this.textContent = 'Copy to Clipboard';
+                    this.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                this.textContent = 'Copied!';
+                this.classList.add('copied');
+                setTimeout(() => {
+                    this.textContent = 'Copy to Clipboard';
+                    this.classList.remove('copied');
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
