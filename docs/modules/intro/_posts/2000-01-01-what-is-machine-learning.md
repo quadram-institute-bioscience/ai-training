@@ -2,6 +2,17 @@
 title: What is Machine Learning?
 ---
 
+> The course requires reading this notes or watching the
+> introductory lecture (30 minutes):
+
+
+<div class="video">
+<figure>
+<iframe width="640" height="480" src="https://www.youtube.com/embed/7O9bC1P5jGM" frameborder="0" allowfullscreen></iframe>
+</figure>
+</div>
+
+
 ## What is Machine Learning?
 
 Machine Learning (ML) is a subset of artificial intelligence that enables computers to learn and 
