@@ -4,12 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FASTQ.gz per-cycle quality plot</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; background: #f6f6f6; color: #222; }
     header { padding: 1rem 1.25rem; background: #222; color: white; }
-    main { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+    main { max-width: 1280px; margin: 0 auto; padding: 1rem; }
     .dropgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
     .dropzone { background: white; border: 2px dashed #999; border-radius: 14px; padding: 1rem; min-height: 130px; }
     .dropzone.drag { border-color: #111; background: #fafafa; }
@@ -18,16 +16,16 @@
     button { margin-top: 1rem; margin-right: .5rem; padding: .7rem 1rem; border: 0; border-radius: 10px; background: #222; color: white; cursor: pointer; }
     button:disabled { opacity: .45; cursor: not-allowed; }
     .status { margin: 1rem 0; padding: .8rem 1rem; background: white; border-radius: 12px; white-space: pre-wrap; }
-    .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 1rem; }
+    .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(560px, 1fr)); gap: 1rem; }
     .plotcard { background: white; border-radius: 14px; padding: 1rem; box-shadow: 0 1px 8px rgba(0,0,0,.06); }
-    canvas { width: 100%; height: 430px; }
+    canvas { width: 100%; height: 460px; border: 1px solid #ddd; background: white; }
     .small { color: #666; font-size: .9rem; }
   </style>
 </head>
 <body>
   <header>
     <h1>FASTQ.gz per-cycle quality viewer</h1>
-    <div class="small">Streams gzip-compressed FASTQ files in chunks; does not read the full file into memory.</div>
+    <div class="small">Fully local applet: no CDN, no network, no full-file loading. Uses browser-native gzip streaming.</div>
   </header>
 
   <main>
@@ -56,10 +54,9 @@
 
 <script>
 const PHRED_OFFSET = 33;
-const MAX_RENDER_POINTS = 600;
+const MAX_RENDER_POINTS = 900;
 let files = { F: null, R: null };
 let cancelRequested = false;
-let charts = { F: null, R: null };
 
 const $ = id => document.getElementById(id);
 const status = msg => $('status').textContent = msg;
@@ -69,16 +66,12 @@ function wireDrop(kind) {
   const input = $('file' + kind);
   const name = $('name' + kind);
 
-  input.addEventListener('change', () => setFile(kind, input.files[0]));
-  for (const ev of ['dragenter', 'dragover']) {
-    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); });
-  }
-  for (const ev of ['dragleave', 'drop']) {
-    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); });
-  }
-  drop.addEventListener('drop', e => setFile(kind, e.dataTransfer.files[0]));
+  input.addEventListener('change', () => setFile(input.files[0]));
+  for (const ev of ['dragenter', 'dragover']) drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); });
+  for (const ev of ['dragleave', 'drop']) drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); });
+  drop.addEventListener('drop', e => setFile(e.dataTransfer.files[0]));
 
-  function setFile(kind, file) {
+  function setFile(file) {
     if (!file) return;
     files[kind] = file;
     name.textContent = `${file.name} (${formatBytes(file.size)})`;
@@ -94,25 +87,27 @@ async function run() {
   cancelRequested = false;
   $('run').disabled = true;
   $('cancel').disabled = false;
+  clearCanvas('chartF');
+  clearCanvas('chartR');
+
   try {
-    clearCharts();
     status('Parsing forward file...');
     const fStats = await parseFastqStreaming(files.F, u => status(`Parsing forward file...\n${formatProgress(u)}`));
     if (cancelRequested) throw new Error('Cancelled');
+    drawQualityPlot('chartF', files.F.name, fStats);
 
     status('Parsing reverse file...');
     const rStats = await parseFastqStreaming(files.R, u => status(`Parsing reverse file...\n${formatProgress(u)}`));
     if (cancelRequested) throw new Error('Cancelled');
+    drawQualityPlot('chartR', files.R.name, rStats);
 
-    renderChart('F', files.F.name, fStats);
-    renderChart('R', files.R.name, rStats);
     status(
       `Done.\n` +
       `Forward: ${fStats.reads.toLocaleString()} reads, ${fStats.totalBases.toLocaleString()} bases.\n` +
       `Reverse: ${rStats.reads.toLocaleString()} reads, ${rStats.totalBases.toLocaleString()} bases.`
     );
   } catch (err) {
-    status(err.message || String(err));
+    status(explainError(err));
   } finally {
     $('run').disabled = !(files.F && files.R);
     $('cancel').disabled = true;
@@ -126,54 +121,51 @@ async function parseFastqStreaming(file, onProgress) {
   let lineNo = 0;
   let reads = 0;
   let totalBases = 0;
-  let lastUi = performance.now();
   let processedCompressedBytes = 0;
+  let lastUi = performance.now();
 
-  const reader = file.stream().getReader();
+  let stream = file.stream();
   const isGzip = /\.g?z$/i.test(file.name);
-  let gunzip = null;
-  let gunzipError = null;
-
   if (isGzip) {
-    if (!window.fflate || !fflate.AsyncGunzip) throw new Error('Could not load fflate gzip decoder. Check your internet connection or vendor fflate locally.');
-    gunzip = new fflate.AsyncGunzip((err, chunk, final) => {
-      if (err) { gunzipError = err; return; }
-      consumeText(decoder.decode(chunk, { stream: !final }));
-      if (final) consumeText(decoder.decode());
-    });
+    if (!('DecompressionStream' in window)) throw new Error('This browser does not support built-in gzip streaming. Try current Chrome, Edge, Safari, or Firefox.');
+    stream = stream.pipeThrough(new DecompressionStream('gzip'));
   }
 
+  const reader = stream.getReader();
   while (true) {
     if (cancelRequested) throw new Error('Cancelled');
-    const { value, done } = await reader.read();
-    if (done) break;
-    processedCompressedBytes += value.byteLength;
-
-    if (isGzip) {
-      gunzip.push(value, false);
-      if (gunzipError) throw new Error(`Gzip decompression failed: ${gunzipError.message || gunzipError}. Is this really a .gz file?`);
-    } else {
-      consumeText(decoder.decode(value, { stream: true }));
+    let result;
+    try {
+      result = await reader.read();
+    } catch (e) {
+      throw new Error(`Gzip/input stream failed while reading ${file.name}. This usually means the file is not actually gzip-compressed, is corrupted/truncated, or uses a gzip variant your browser cannot stream. Details: ${e.message || e}`);
     }
+    const { value, done } = result;
+    if (done) break;
+
+    processedCompressedBytes += value.byteLength;
+    consumeText(decoder.decode(value, { stream: true }));
 
     const now = performance.now();
     if (now - lastUi > 250) {
-      onProgress({ reads, totalBases, processedCompressedBytes, fileSize: file.size });
+      onProgress({ reads, totalBases, processedCompressedBytes, fileSize: file.size, gzip: isGzip });
       await new Promise(requestAnimationFrame);
       lastUi = now;
     }
   }
-
-  if (isGzip) {
-    gunzip.push(new Uint8Array(0), true);
-    if (gunzipError) throw new Error(`Gzip decompression failed: ${gunzipError.message || gunzipError}.`);
-    await new Promise(resolve => setTimeout(resolve, 0));
-  } else {
-    consumeText(decoder.decode());
-  }
+  consumeText(decoder.decode());
 
   if (leftover.length) handleLine(leftover.endsWith('\r') ? leftover.slice(0, -1) : leftover);
   if (lineNo % 4 !== 0) throw new Error(`FASTQ appears truncated: parsed ${lineNo.toLocaleString()} lines, not a multiple of 4.`);
+
+  // Final reconciliation from the accumulated quality matrix. For ordinary FASTQ,
+  // perCycle[0].n equals the number of reads, and sum(perCycle[*].n) equals total bases.
+  // This also protects against any browser/streaming edge case where counters and plot data diverge.
+  const matrixReads = perCycle[0] ? perCycle[0].n : 0;
+  const matrixBases = perCycle.reduce((s, slot) => s + (slot ? slot.n : 0), 0);
+  if (matrixReads > 0) reads = matrixReads;
+  if (matrixBases > 0) totalBases = matrixBases;
+  if (lineNo > 0 && reads === 0) throw new Error(`No reads were counted in ${file.name}, although ${lineNo.toLocaleString()} line(s) were parsed.`);
 
   return { reads, totalBases, perCycle };
 
@@ -193,10 +185,13 @@ async function parseFastqStreaming(file, onProgress) {
 
   function handleLine(line) {
     const phase = lineNo & 3;
-    if (phase === 1) {
-      totalBases += line.length;
-    } else if (phase === 3) {
+    if (phase === 0 && lineNo < 8 && !line.startsWith('@')) throw new Error(`Invalid FASTQ header near line ${lineNo + 1}: expected '@'.`);
+    if (phase === 2 && lineNo < 8 && !line.startsWith('+')) throw new Error(`Invalid FASTQ separator near line ${lineNo + 1}: expected '+'.`);
+    if (phase === 3) {
+      // Count reads and bases from the quality line, not the sequence line.
+      // This keeps the plotted quality data, read count, and base count in lockstep.
       reads++;
+      totalBases += line.length;
       for (let i = 0; i < line.length; i++) {
         const q = line.charCodeAt(i) - PHRED_OFFSET;
         if (!perCycle[i]) perCycle[i] = { n: 0, sum: 0, qCounts: new Uint32Array(94) };
@@ -210,54 +205,107 @@ async function parseFastqStreaming(file, onProgress) {
   }
 }
 
-function renderChart(kind, title, stats) {
-  const rows = stats.perCycle.map((slot, i) => {
+function drawQualityPlot(canvasId, title, stats) {
+  const canvas = $(canvasId);
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(600, Math.floor(rect.width * dpr));
+  canvas.height = Math.floor(460 * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const w = canvas.width / dpr, h = canvas.height / dpr;
+  const pad = { l: 62, r: 52, t: 54, b: 58 };
+  const plotW = w - pad.l - pad.r;
+  const plotH = h - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#ddd'; ctx.fillRect(0, 0, w, 32);
+  ctx.strokeStyle = '#222'; ctx.strokeRect(0.5, 0.5, w - 1, 31);
+  ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.font = '16px system-ui';
+  ctx.fillText(title, w / 2, 22);
+
+  const rowsRaw = stats.perCycle.map((slot, i) => {
     const q = quantilesFromCounts(slot.qCounts, slot.n);
-    return {
-      x: i + 1,
-      mean: slot.sum / slot.n,
-      p10: q['0.1'], q1: q['0.25'], median: q['0.5'], q3: q['0.75'], p90: q['0.9'],
-      represented: 100 * slot.n / stats.reads
-    };
+    return { x: i + 1, mean: slot.sum / slot.n, p10: q['0.1'], q1: q['0.25'], median: q['0.5'], q3: q['0.75'], p90: q['0.9'], represented: 100 * slot.n / stats.reads };
   });
-  const plotted = downsampleRows(rows, MAX_RENDER_POINTS);
+  const rows = downsampleRows(rowsRaw, MAX_RENDER_POINTS);
+  const maxX = Math.max(1, rowsRaw.length);
+  const xToPx = x => pad.l + (x - 1) / Math.max(1, maxX - 1) * plotW;
+  const qToPx = q => pad.t + (45 - q) / 45 * plotH;
+  const pctToPx = p => pad.t + (100 - p) / 100 * plotH;
 
-  charts[kind] = new Chart($('chart' + kind), {
-    type: 'line',
-    data: {
-      datasets: [
-        band('p10', 'p90', '10–90% quality band', plotted),
-        band('q1', 'q3', '25–75% quality band', plotted),
-        line('median', 'Median quality', plotted, 2),
-        line('mean', 'Mean quality', plotted, 2, true),
-        line('represented', '% reads represented', plotted, 1, false, 'y2')
-      ]
-    },
-    options: {
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
-      parsing: false,
-      plugins: {
-        title: { display: true, text: `${title} — Reads: ${stats.reads.toLocaleString()}` },
-        legend: { position: 'bottom' },
-        decimation: { enabled: true, algorithm: 'min-max' }
-      },
-      scales: {
-        x: { type: 'linear', title: { display: true, text: 'Cycle' } },
-        y: { min: 0, max: 45, title: { display: true, text: 'Quality score' } },
-        y2: { position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { callback: v => v + '%' } }
-      }
-    }
-  });
+  // Grid and axes
+  ctx.strokeStyle = '#e6e6e6'; ctx.lineWidth = 1;
+  ctx.fillStyle = '#333'; ctx.font = '12px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let q = 0; q <= 40; q += 10) {
+    const y = qToPx(q);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.fillText(q, pad.l - 8, y);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const xStep = niceStep(maxX);
+  for (let x = 0; x <= maxX; x += xStep) {
+    const xp = xToPx(Math.max(1, x));
+    ctx.fillText(x, xp, h - pad.b + 10);
+  }
+  ctx.strokeStyle = '#333'; ctx.strokeRect(pad.l, pad.t, plotW, plotH);
+
+  // Quality percentile bands, grayscale like FastQC-style plots
+  drawBand(rows, 'p10', 'p90', 'rgba(0,0,0,0.08)');
+  drawBand(rows, 'q1', 'q3', 'rgba(0,0,0,0.16)');
+  drawLine(rows, 'median', '#111', 2, []);
+  drawLine(rows, 'mean', '#e76f51', 1.7, [6, 4]);
+  drawLine(rows, 'represented', '#e00', 1.4, [], pctToPx);
+
+  // Labels
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#111'; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText('Cycle', pad.l + plotW / 2, h - 8);
+  ctx.save(); ctx.translate(18, pad.t + plotH / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('Quality Score', 0, 0); ctx.restore();
+  ctx.fillStyle = '#e00'; ctx.font = '16px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillText('100%', w - 6, pctToPx(100)); ctx.fillText('0%', w - 6, pctToPx(0));
+  ctx.textAlign = 'left'; ctx.font = '18px system-ui'; ctx.textBaseline = 'bottom';
+  ctx.fillText(`Reads: ${stats.reads.toLocaleString()}`, pad.l, h - 8);
+
+  // Legend
+  ctx.font = '12px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const legendY = 42;
+  legendItem(70, legendY, '#111', [], 'median');
+  legendItem(145, legendY, '#e76f51', [6,4], 'mean');
+  legendItem(215, legendY, '#e00', [], '% reads present');
+
+  function drawBand(rows, lo, hi, color) {
+    if (!rows.length) return;
+    ctx.beginPath();
+    rows.forEach((r, i) => { const x = xToPx(r.x), y = qToPx(r[hi]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    for (let i = rows.length - 1; i >= 0; i--) { const r = rows[i]; ctx.lineTo(xToPx(r.x), qToPx(r[lo])); }
+    ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+  }
+  function drawLine(rows, key, color, width, dash, yFunc = qToPx) {
+    if (!rows.length) return;
+    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash);
+    rows.forEach((r, i) => { const x = xToPx(r.x), y = yFunc(r[key]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  function legendItem(x, y, color, dash, text) {
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 26, y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#333'; ctx.fillText(text, x + 32, y);
+  }
 }
 
-function band(lo, hi, label, rows) {
-  return { label, data: rows.map(r => ({ x: r.x, y: [r[lo], r[hi]] })), borderWidth: 0, pointRadius: 0, backgroundColor: 'rgba(0,0,0,0.12)', yAxisID: 'y' };
-}
-
-function line(key, label, rows, width, dashed = false, axis = 'y') {
-  return { label, data: rows.map(r => ({ x: r.x, y: r[key] })), borderWidth: width, pointRadius: 0, borderDash: dashed ? [6, 4] : [], fill: false, yAxisID: axis };
+function clearCanvas(id) {
+  const canvas = $(id);
+  // Resetting width/height is the most reliable way to clear stale pixels,
+  // especially after switching between Chart.js/canvas versions in the same page.
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(600, Math.floor(rect.width * dpr));
+  canvas.height = Math.floor(460 * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function quantilesFromCounts(counts, n) {
@@ -285,8 +333,11 @@ function downsampleRows(rows, maxPoints) {
   return out;
 }
 
-function clearCharts() {
-  for (const k of ['F', 'R']) if (charts[k]) { charts[k].destroy(); charts[k] = null; }
+function niceStep(maxX) {
+  const raw = Math.max(1, maxX / 5);
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / pow;
+  return (n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
 }
 
 function formatBytes(n) {
@@ -297,8 +348,14 @@ function formatBytes(n) {
 }
 
 function formatProgress(u) {
-  const pct = u.fileSize ? `\n${(100 * u.processedCompressedBytes / u.fileSize).toFixed(1)}% of compressed file read` : '';
+  const pct = u.gzip ? '' : `\n${(100 * u.processedCompressedBytes / u.fileSize).toFixed(1)}% of file read`;
   return `${u.reads.toLocaleString()} reads\n${u.totalBases.toLocaleString()} bases parsed${pct}`;
+}
+
+function explainError(err) {
+  const msg = err && err.message ? err.message : String(err);
+  if (/network/i.test(msg)) return `Network error removed: this version has no external scripts. Reload this updated page and try again.\n\nOriginal error: ${msg}`;
+  return msg;
 }
 </script>
 </body>
