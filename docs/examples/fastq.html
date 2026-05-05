@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FASTQ.gz per-cycle quality plot</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; background: #f6f6f6; color: #222; }
+    header { padding: 1rem 1.25rem; background: #222; color: white; }
+    main { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+    .dropgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .dropzone { background: white; border: 2px dashed #999; border-radius: 14px; padding: 1rem; min-height: 130px; }
+    .dropzone.drag { border-color: #111; background: #fafafa; }
+    .dropzone h2 { margin: 0 0 .5rem; font-size: 1.05rem; }
+    input[type=file] { width: 100%; }
+    button { margin-top: 1rem; padding: .7rem 1rem; border: 0; border-radius: 10px; background: #222; color: white; cursor: pointer; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .status { margin: 1rem 0; padding: .8rem 1rem; background: white; border-radius: 12px; white-space: pre-wrap; }
+    .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 1rem; }
+    .plotcard { background: white; border-radius: 14px; padding: 1rem; box-shadow: 0 1px 8px rgba(0,0,0,.06); }
+    canvas { width: 100%; height: 430px; }
+    .small { color: #666; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FASTQ.gz per-cycle quality viewer</h1>
+    <div class="small">Streams gzip-compressed FASTQ files line by line; does not read the full file into memory.</div>
+  </header>
+
+  <main>
+    <section class="dropgrid">
+      <div class="dropzone" id="dropF">
+        <h2>Forward FASTQ.gz</h2>
+        <input id="fileF" type="file" accept=".fastq.gz,.fq.gz,.fastq,.fq,.gz" />
+        <p id="nameF" class="small">Drop or choose a file.</p>
+      </div>
+      <div class="dropzone" id="dropR">
+        <h2>Reverse FASTQ.gz</h2>
+        <input id="fileR" type="file" accept=".fastq.gz,.fq.gz,.fastq,.fq,.gz" />
+        <p id="nameR" class="small">Drop or choose a file.</p>
+      </div>
+    </section>
+
+    <button id="run" disabled>Parse and plot</button>
+    <button id="cancel" disabled>Cancel</button>
+    <div id="status" class="status">Select both files to begin.</div>
+
+    <section class="plots">
+      <div class="plotcard"><canvas id="chartF"></canvas></div>
+      <div class="plotcard"><canvas id="chartR"></canvas></div>
+    </section>
+  </main>
+
+<script>
+const PHRED_OFFSET = 33;       // Illumina/Sanger FASTQ
+const MAX_RENDER_POINTS = 600; // plotting downsampling only; stats remain exact
+let files = { F: null, R: null };
+let cancelRequested = false;
+let charts = { F: null, R: null };
+
+const $ = id => document.getElementById(id);
+const status = msg => $('status').textContent = msg;
+
+function wireDrop(kind) {
+  const drop = $('drop' + kind);
+  const input = $('file' + kind);
+  const name = $('name' + kind);
+
+  input.addEventListener('change', () => setFile(kind, input.files[0]));
+  for (const ev of ['dragenter', 'dragover']) {
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); });
+  }
+  for (const ev of ['dragleave', 'drop']) {
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); });
+  }
+  drop.addEventListener('drop', e => setFile(kind, e.dataTransfer.files[0]));
+
+  function setFile(kind, file) {
+    if (!file) return;
+    files[kind] = file;
+    name.textContent = `${file.name} (${formatBytes(file.size)})`;
+    $('run').disabled = !(files.F && files.R);
+  }
+}
+
+wireDrop('F'); wireDrop('R');
+$('run').addEventListener('click', run);
+$('cancel').addEventListener('click', () => { cancelRequested = true; });
+
+async function run() {
+  cancelRequested = false;
+  $('run').disabled = true;
+  $('cancel').disabled = false;
+  try {
+    clearCharts();
+    status('Parsing forward file...');
+    const fStats = await parseFastqStreaming(files.F, update => {
+      status(`Parsing forward file...\n${formatProgress(update)}`);
+    });
+    if (cancelRequested) throw new Error('Cancelled');
+
+    status('Parsing reverse file...');
+    const rStats = await parseFastqStreaming(files.R, update => {
+      status(`Parsing reverse file...\n${formatProgress(update)}`);
+    });
+    if (cancelRequested) throw new Error('Cancelled');
+
+    renderChart('F', files.F.name, fStats);
+    renderChart('R', files.R.name, rStats);
+    status(
+      `Done.\n` +
+      `Forward: ${fStats.reads.toLocaleString()} reads, ${fStats.totalBases.toLocaleString()} bases.\n` +
+      `Reverse: ${rStats.reads.toLocaleString()} reads, ${rStats.totalBases.toLocaleString()} bases.`
+    );
+  } catch (err) {
+    status(err.message || String(err));
+  } finally {
+    $('run').disabled = !(files.F && files.R);
+    $('cancel').disabled = true;
+  }
+}
+
+async function parseFastqStreaming(file, onProgress) {
+  const perCycle = []; // index -> { n, sum, qCounts: Uint32Array(94) }
+  const decoder = new TextDecoderStream();
+  let byteStream = file.stream();
+
+  if (file.name.endsWith('.gz')) {
+    if (!('DecompressionStream' in window)) {
+      throw new Error('This browser does not support DecompressionStream. Use a current Chrome, Edge, or Safari.');
+    }
+    byteStream = byteStream.pipeThrough(new DecompressionStream('gzip'));
+  }
+
+  const reader = byteStream.pipeThrough(decoder).getReader();
+  let leftover = '';
+  let lineNo = 0;
+  let reads = 0;
+  let totalBases = 0;
+  let lastUi = performance.now();
+
+  while (true) {
+    if (cancelRequested) throw new Error('Cancelled');
+    const { value, done } = await reader.read();
+    if (done) break;
+    leftover += value;
+
+    let start = 0;
+    while (true) {
+      const nl = leftover.indexOf('\n', start);
+      if (nl === -1) break;
+      let line = leftover.slice(start, nl);
+      if (line.endsWith('\r')) line = line.slice(0, -1);
+      handleLine(line);
+      start = nl + 1;
+    }
+    leftover = leftover.slice(start);
+
+    const now = performance.now();
+    if (now - lastUi > 250) {
+      onProgress({ reads, totalBases, processedBytes: readerProcessedHint(file, reads, totalBases) });
+      await new Promise(requestAnimationFrame);
+      lastUi = now;
+    }
+  }
+  if (leftover.length) handleLine(leftover.endsWith('\r') ? leftover.slice(0, -1) : leftover);
+  if (lineNo % 4 !== 0) throw new Error('FASTQ appears truncated: line count is not a multiple of 4.');
+
+  return { reads, totalBases, perCycle };
+
+  function handleLine(line) {
+    const phase = lineNo & 3;
+    if (phase === 1) {
+      totalBases += line.length;
+    } else if (phase === 3) {
+      reads++;
+      for (let i = 0; i < line.length; i++) {
+        const q = line.charCodeAt(i) - PHRED_OFFSET;
+        if (!perCycle[i]) perCycle[i] = { n: 0, sum: 0, qCounts: new Uint32Array(94) };
+        const slot = perCycle[i];
+        slot.n++;
+        slot.sum += q;
+        if (q >= 0 && q < slot.qCounts.length) slot.qCounts[q]++;
+      }
+    }
+    lineNo++;
+  }
+}
+
+function renderChart(kind, title, stats) {
+  const rows = stats.perCycle.map((slot, i) => {
+    const q = quantilesFromCounts(slot.qCounts, slot.n);
+    return {
+      x: i + 1,
+      mean: slot.sum / slot.n,
+      p10: q[0.10], q1: q[0.25], median: q[0.50], q3: q[0.75], p90: q[0.90],
+      represented: 100 * slot.n / stats.reads
+    };
+  });
+  const plotted = downsampleRows(rows, MAX_RENDER_POINTS);
+
+  const ctx = $('chart' + kind);
+  charts[kind] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        band('p10', 'p90', '10–90% quality band', plotted),
+        band('q1', 'q3', '25–75% quality band', plotted),
+        line('median', 'Median quality', plotted, 2),
+        line('mean', 'Mean quality', plotted, 2, true),
+        line('represented', '% reads represented', plotted, 1, false, 'y2')
+      ]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      parsing: false,
+      plugins: {
+        title: { display: true, text: `${title} — Reads: ${stats.reads.toLocaleString()}` },
+        legend: { position: 'bottom' },
+        decimation: { enabled: true, algorithm: 'min-max' }
+      },
+      scales: {
+        x: { type: 'linear', title: { display: true, text: 'Cycle' } },
+        y: { min: 0, max: 45, title: { display: true, text: 'Quality score' } },
+        y2: { position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+}
+
+function band(lo, hi, label, rows) {
+  return {
+    label,
+    data: rows.map(r => ({ x: r.x, y: [r[lo], r[hi]] })),
+    borderWidth: 0,
+    pointRadius: 0,
+    backgroundColor: 'rgba(0,0,0,0.12)',
+    yAxisID: 'y'
+  };
+}
+
+function line(key, label, rows, width, dashed = false, axis = 'y') {
+  return {
+    label,
+    data: rows.map(r => ({ x: r.x, y: r[key] })),
+    borderWidth: width,
+    pointRadius: 0,
+    borderDash: dashed ? [6, 4] : [],
+    fill: false,
+    yAxisID: axis
+  };
+}
+
+function quantilesFromCounts(counts, n) {
+  const targets = { 0.10: Math.ceil(n * 0.10), 0.25: Math.ceil(n * 0.25), 0.50: Math.ceil(n * 0.50), 0.75: Math.ceil(n * 0.75), 0.90: Math.ceil(n * 0.90) };
+  const out = {};
+  let cumulative = 0;
+  const keys = Object.keys(targets);
+  for (let q = 0; q < counts.length; q++) {
+    cumulative += counts[q];
+    for (const k of keys) if (out[k] === undefined && cumulative >= targets[k]) out[k] = q;
+  }
+  return out;
+}
+
+function downsampleRows(rows, maxPoints) {
+  if (rows.length <= maxPoints) return rows;
+  const step = Math.ceil(rows.length / maxPoints);
+  const out = [];
+  for (let i = 0; i < rows.length; i += step) {
+    const chunk = rows.slice(i, i + step);
+    const avg = { x: Math.round(chunk.reduce((s, r) => s + r.x, 0) / chunk.length) };
+    for (const k of ['mean','p10','q1','median','q3','p90','represented']) {
+      avg[k] = chunk.reduce((s, r) => s + r[k], 0) / chunk.length;
+    }
+    out.push(avg);
+  }
+  return out;
+}
+
+function clearCharts() {
+  for (const k of ['F', 'R']) if (charts[k]) { charts[k].destroy(); charts[k] = null; }
+}
+
+function formatBytes(n) {
+  const units = ['B','KB','MB','GB','TB'];
+  let i = 0, x = n;
+  while (x >= 1024 && i < units.length - 1) { x /= 1024; i++; }
+  return `${x.toFixed(i ? 1 : 0)} ${units[i]}`;
+}
+
+function formatProgress(u) {
+  return `${u.reads.toLocaleString()} reads\n${u.totalBases.toLocaleString()} bases parsed`;
+}
+
+function readerProcessedHint() { return null; }
+</script>
+</body>
+</html>
