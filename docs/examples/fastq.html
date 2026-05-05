@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FASTQ.gz per-cycle quality plot</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; background: #f6f6f6; color: #222; }
     header { padding: 1rem 1.25rem; background: #222; color: white; }
@@ -14,7 +15,7 @@
     .dropzone.drag { border-color: #111; background: #fafafa; }
     .dropzone h2 { margin: 0 0 .5rem; font-size: 1.05rem; }
     input[type=file] { width: 100%; }
-    button { margin-top: 1rem; padding: .7rem 1rem; border: 0; border-radius: 10px; background: #222; color: white; cursor: pointer; }
+    button { margin-top: 1rem; margin-right: .5rem; padding: .7rem 1rem; border: 0; border-radius: 10px; background: #222; color: white; cursor: pointer; }
     button:disabled { opacity: .45; cursor: not-allowed; }
     .status { margin: 1rem 0; padding: .8rem 1rem; background: white; border-radius: 12px; white-space: pre-wrap; }
     .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 1rem; }
@@ -26,7 +27,7 @@
 <body>
   <header>
     <h1>FASTQ.gz per-cycle quality viewer</h1>
-    <div class="small">Streams gzip-compressed FASTQ files line by line; does not read the full file into memory.</div>
+    <div class="small">Streams gzip-compressed FASTQ files in chunks; does not read the full file into memory.</div>
   </header>
 
   <main>
@@ -54,8 +55,8 @@
   </main>
 
 <script>
-const PHRED_OFFSET = 33;       // Illumina/Sanger FASTQ
-const MAX_RENDER_POINTS = 600; // plotting downsampling only; stats remain exact
+const PHRED_OFFSET = 33;
+const MAX_RENDER_POINTS = 600;
 let files = { F: null, R: null };
 let cancelRequested = false;
 let charts = { F: null, R: null };
@@ -96,15 +97,11 @@ async function run() {
   try {
     clearCharts();
     status('Parsing forward file...');
-    const fStats = await parseFastqStreaming(files.F, update => {
-      status(`Parsing forward file...\n${formatProgress(update)}`);
-    });
+    const fStats = await parseFastqStreaming(files.F, u => status(`Parsing forward file...\n${formatProgress(u)}`));
     if (cancelRequested) throw new Error('Cancelled');
 
     status('Parsing reverse file...');
-    const rStats = await parseFastqStreaming(files.R, update => {
-      status(`Parsing reverse file...\n${formatProgress(update)}`);
-    });
+    const rStats = await parseFastqStreaming(files.R, u => status(`Parsing reverse file...\n${formatProgress(u)}`));
     if (cancelRequested) throw new Error('Cancelled');
 
     renderChart('F', files.F.name, fStats);
@@ -123,30 +120,65 @@ async function run() {
 }
 
 async function parseFastqStreaming(file, onProgress) {
-  const perCycle = []; // index -> { n, sum, qCounts: Uint32Array(94) }
-  const decoder = new TextDecoderStream();
-  let byteStream = file.stream();
-
-  if (file.name.endsWith('.gz')) {
-    if (!('DecompressionStream' in window)) {
-      throw new Error('This browser does not support DecompressionStream. Use a current Chrome, Edge, or Safari.');
-    }
-    byteStream = byteStream.pipeThrough(new DecompressionStream('gzip'));
-  }
-
-  const reader = byteStream.pipeThrough(decoder).getReader();
+  const perCycle = [];
+  const decoder = new TextDecoder();
   let leftover = '';
   let lineNo = 0;
   let reads = 0;
   let totalBases = 0;
   let lastUi = performance.now();
+  let processedCompressedBytes = 0;
+
+  const reader = file.stream().getReader();
+  const isGzip = /\.g?z$/i.test(file.name);
+  let gunzip = null;
+  let gunzipError = null;
+
+  if (isGzip) {
+    if (!window.fflate || !fflate.AsyncGunzip) throw new Error('Could not load fflate gzip decoder. Check your internet connection or vendor fflate locally.');
+    gunzip = new fflate.AsyncGunzip((err, chunk, final) => {
+      if (err) { gunzipError = err; return; }
+      consumeText(decoder.decode(chunk, { stream: !final }));
+      if (final) consumeText(decoder.decode());
+    });
+  }
 
   while (true) {
     if (cancelRequested) throw new Error('Cancelled');
     const { value, done } = await reader.read();
     if (done) break;
-    leftover += value;
+    processedCompressedBytes += value.byteLength;
 
+    if (isGzip) {
+      gunzip.push(value, false);
+      if (gunzipError) throw new Error(`Gzip decompression failed: ${gunzipError.message || gunzipError}. Is this really a .gz file?`);
+    } else {
+      consumeText(decoder.decode(value, { stream: true }));
+    }
+
+    const now = performance.now();
+    if (now - lastUi > 250) {
+      onProgress({ reads, totalBases, processedCompressedBytes, fileSize: file.size });
+      await new Promise(requestAnimationFrame);
+      lastUi = now;
+    }
+  }
+
+  if (isGzip) {
+    gunzip.push(new Uint8Array(0), true);
+    if (gunzipError) throw new Error(`Gzip decompression failed: ${gunzipError.message || gunzipError}.`);
+    await new Promise(resolve => setTimeout(resolve, 0));
+  } else {
+    consumeText(decoder.decode());
+  }
+
+  if (leftover.length) handleLine(leftover.endsWith('\r') ? leftover.slice(0, -1) : leftover);
+  if (lineNo % 4 !== 0) throw new Error(`FASTQ appears truncated: parsed ${lineNo.toLocaleString()} lines, not a multiple of 4.`);
+
+  return { reads, totalBases, perCycle };
+
+  function consumeText(text) {
+    leftover += text;
     let start = 0;
     while (true) {
       const nl = leftover.indexOf('\n', start);
@@ -157,18 +189,7 @@ async function parseFastqStreaming(file, onProgress) {
       start = nl + 1;
     }
     leftover = leftover.slice(start);
-
-    const now = performance.now();
-    if (now - lastUi > 250) {
-      onProgress({ reads, totalBases, processedBytes: readerProcessedHint(file, reads, totalBases) });
-      await new Promise(requestAnimationFrame);
-      lastUi = now;
-    }
   }
-  if (leftover.length) handleLine(leftover.endsWith('\r') ? leftover.slice(0, -1) : leftover);
-  if (lineNo % 4 !== 0) throw new Error('FASTQ appears truncated: line count is not a multiple of 4.');
-
-  return { reads, totalBases, perCycle };
 
   function handleLine(line) {
     const phase = lineNo & 3;
@@ -195,14 +216,13 @@ function renderChart(kind, title, stats) {
     return {
       x: i + 1,
       mean: slot.sum / slot.n,
-      p10: q[0.10], q1: q[0.25], median: q[0.50], q3: q[0.75], p90: q[0.90],
+      p10: q['0.1'], q1: q['0.25'], median: q['0.5'], q3: q['0.75'], p90: q['0.9'],
       represented: 100 * slot.n / stats.reads
     };
   });
   const plotted = downsampleRows(rows, MAX_RENDER_POINTS);
 
-  const ctx = $('chart' + kind);
-  charts[kind] = new Chart(ctx, {
+  charts[kind] = new Chart($('chart' + kind), {
     type: 'line',
     data: {
       datasets: [
@@ -233,30 +253,15 @@ function renderChart(kind, title, stats) {
 }
 
 function band(lo, hi, label, rows) {
-  return {
-    label,
-    data: rows.map(r => ({ x: r.x, y: [r[lo], r[hi]] })),
-    borderWidth: 0,
-    pointRadius: 0,
-    backgroundColor: 'rgba(0,0,0,0.12)',
-    yAxisID: 'y'
-  };
+  return { label, data: rows.map(r => ({ x: r.x, y: [r[lo], r[hi]] })), borderWidth: 0, pointRadius: 0, backgroundColor: 'rgba(0,0,0,0.12)', yAxisID: 'y' };
 }
 
 function line(key, label, rows, width, dashed = false, axis = 'y') {
-  return {
-    label,
-    data: rows.map(r => ({ x: r.x, y: r[key] })),
-    borderWidth: width,
-    pointRadius: 0,
-    borderDash: dashed ? [6, 4] : [],
-    fill: false,
-    yAxisID: axis
-  };
+  return { label, data: rows.map(r => ({ x: r.x, y: r[key] })), borderWidth: width, pointRadius: 0, borderDash: dashed ? [6, 4] : [], fill: false, yAxisID: axis };
 }
 
 function quantilesFromCounts(counts, n) {
-  const targets = { 0.10: Math.ceil(n * 0.10), 0.25: Math.ceil(n * 0.25), 0.50: Math.ceil(n * 0.50), 0.75: Math.ceil(n * 0.75), 0.90: Math.ceil(n * 0.90) };
+  const targets = { 0.1: Math.ceil(n * 0.10), 0.25: Math.ceil(n * 0.25), 0.5: Math.ceil(n * 0.50), 0.75: Math.ceil(n * 0.75), 0.9: Math.ceil(n * 0.90) };
   const out = {};
   let cumulative = 0;
   const keys = Object.keys(targets);
@@ -274,9 +279,7 @@ function downsampleRows(rows, maxPoints) {
   for (let i = 0; i < rows.length; i += step) {
     const chunk = rows.slice(i, i + step);
     const avg = { x: Math.round(chunk.reduce((s, r) => s + r.x, 0) / chunk.length) };
-    for (const k of ['mean','p10','q1','median','q3','p90','represented']) {
-      avg[k] = chunk.reduce((s, r) => s + r[k], 0) / chunk.length;
-    }
+    for (const k of ['mean','p10','q1','median','q3','p90','represented']) avg[k] = chunk.reduce((s, r) => s + r[k], 0) / chunk.length;
     out.push(avg);
   }
   return out;
@@ -294,10 +297,9 @@ function formatBytes(n) {
 }
 
 function formatProgress(u) {
-  return `${u.reads.toLocaleString()} reads\n${u.totalBases.toLocaleString()} bases parsed`;
+  const pct = u.fileSize ? `\n${(100 * u.processedCompressedBytes / u.fileSize).toFixed(1)}% of compressed file read` : '';
+  return `${u.reads.toLocaleString()} reads\n${u.totalBases.toLocaleString()} bases parsed${pct}`;
 }
-
-function readerProcessedHint() { return null; }
 </script>
 </body>
 </html>
