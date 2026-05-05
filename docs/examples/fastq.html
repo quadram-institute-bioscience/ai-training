@@ -5,27 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FASTQ.gz per-cycle quality plot</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; background: #f6f6f6; color: #222; }
-    header { padding: 1rem 1.25rem; background: #222; color: white; }
+    :root {
+      --acid-green: #B6BE00ff;
+      --dark-green: #097E74ff;
+      --charcoal: #2F3D46ff;
+      --bg: #f4f6f5;
+      --card: #ffffff;
+      --grid: rgba(47,61,70,.16);
+      --muted: rgba(47,61,70,.70);
+    }
+    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; background: var(--bg); color: var(--charcoal); }
+    header { padding: 1rem 1.25rem; background: var(--charcoal); color: white; border-bottom: 5px solid var(--dark-green); }
     main { max-width: 1280px; margin: 0 auto; padding: 1rem; }
     .dropgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-    .dropzone { background: white; border: 2px dashed #999; border-radius: 14px; padding: 1rem; min-height: 130px; }
-    .dropzone.drag { border-color: #111; background: #fafafa; }
-    .dropzone h2 { margin: 0 0 .5rem; font-size: 1.05rem; }
+    .dropzone { background: var(--card); border: 2px dashed var(--dark-green); border-radius: 14px; padding: 1rem; min-height: 130px; }
+    .dropzone.drag { border-color: var(--acid-green); background: #fbfcf2; }
+    .dropzone h2 { margin: 0 0 .5rem; font-size: 1.05rem; color: var(--dark-green); }
     input[type=file] { width: 100%; }
-    button { margin-top: 1rem; margin-right: .5rem; padding: .7rem 1rem; border: 0; border-radius: 10px; background: #222; color: white; cursor: pointer; }
+    button { margin-top: 1rem; margin-right: .5rem; padding: .7rem 1rem; border: 0; border-radius: 10px; background: var(--dark-green); color: white; cursor: pointer; font-weight: 700; }
+    button.secondary { background: var(--charcoal); }
     button:disabled { opacity: .45; cursor: not-allowed; }
-    .status { margin: 1rem 0; padding: .8rem 1rem; background: white; border-radius: 12px; white-space: pre-wrap; }
+    .status { margin: 1rem 0; padding: .8rem 1rem; background: var(--card); border-left: 5px solid var(--dark-green); border-radius: 12px; white-space: pre-wrap; }
     .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(560px, 1fr)); gap: 1rem; }
-    .plotcard { background: white; border-radius: 14px; padding: 1rem; box-shadow: 0 1px 8px rgba(0,0,0,.06); }
-    canvas { width: 100%; height: 460px; border: 1px solid #ddd; background: white; }
-    .small { color: #666; font-size: .9rem; }
+    .plotcard { background: var(--card); border-radius: 14px; padding: 1rem; box-shadow: 0 1px 8px rgba(47,61,70,.10); }
+    canvas { width: 100%; border: 1px solid rgba(47,61,70,.18); background: white; border-radius: 8px; }
+    .qualityCanvas { height: 460px; }
+    .heatmapCanvas { height: 330px; margin-top: .75rem; }
+    .small { color: var(--muted); font-size: .9rem; }
   </style>
 </head>
 <body>
   <header>
     <h1>FASTQ.gz per-cycle quality viewer</h1>
-    <div class="small">Fully local applet: no CDN, no network, no full-file loading. Uses browser-native gzip streaming.</div>
+    <div class="small" style="color:rgba(255,255,255,.82)">Fully local applet: no CDN, no network, no full-file loading. Uses browser-native gzip streaming.</div>
   </header>
 
   <main>
@@ -43,18 +55,29 @@
     </section>
 
     <button id="run" disabled>Parse and plot</button>
-    <button id="cancel" disabled>Cancel</button>
+    <button id="cancel" class="secondary" disabled>Cancel</button>
     <div id="status" class="status">Select both files to begin.</div>
 
     <section class="plots">
-      <div class="plotcard"><canvas id="chartF"></canvas></div>
-      <div class="plotcard"><canvas id="chartR"></canvas></div>
+      <div class="plotcard">
+        <canvas id="chartF" class="qualityCanvas"></canvas>
+        <canvas id="heatF" class="heatmapCanvas"></canvas>
+      </div>
+      <div class="plotcard">
+        <canvas id="chartR" class="qualityCanvas"></canvas>
+        <canvas id="heatR" class="heatmapCanvas"></canvas>
+      </div>
     </section>
   </main>
 
 <script>
 const PHRED_OFFSET = 33;
 const MAX_RENDER_POINTS = 900;
+const THEME = {
+  acid: '#B6BE00',
+  green: '#097E74',
+  charcoal: '#2F3D46'
+};
 let files = { F: null, R: null };
 let cancelRequested = false;
 
@@ -87,19 +110,21 @@ async function run() {
   cancelRequested = false;
   $('run').disabled = true;
   $('cancel').disabled = false;
-  clearCanvas('chartF');
-  clearCanvas('chartR');
+  clearCanvas('chartF', 460); clearCanvas('chartR', 460);
+  clearCanvas('heatF', 330); clearCanvas('heatR', 330);
 
   try {
     status('Parsing forward file...');
     const fStats = await parseFastqStreaming(files.F, u => status(`Parsing forward file...\n${formatProgress(u)}`));
     if (cancelRequested) throw new Error('Cancelled');
     drawQualityPlot('chartF', files.F.name, fStats);
+    drawQualityHeatmap('heatF', files.F.name, fStats);
 
     status('Parsing reverse file...');
     const rStats = await parseFastqStreaming(files.R, u => status(`Parsing reverse file...\n${formatProgress(u)}`));
     if (cancelRequested) throw new Error('Cancelled');
     drawQualityPlot('chartR', files.R.name, rStats);
+    drawQualityHeatmap('heatR', files.R.name, rStats);
 
     status(
       `Done.\n` +
@@ -158,9 +183,6 @@ async function parseFastqStreaming(file, onProgress) {
   if (leftover.length) handleLine(leftover.endsWith('\r') ? leftover.slice(0, -1) : leftover);
   if (lineNo % 4 !== 0) throw new Error(`FASTQ appears truncated: parsed ${lineNo.toLocaleString()} lines, not a multiple of 4.`);
 
-  // Final reconciliation from the accumulated quality matrix. For ordinary FASTQ,
-  // perCycle[0].n equals the number of reads, and sum(perCycle[*].n) equals total bases.
-  // This also protects against any browser/streaming edge case where counters and plot data diverge.
   const matrixReads = perCycle[0] ? perCycle[0].n : 0;
   const matrixBases = perCycle.reduce((s, slot) => s + (slot ? slot.n : 0), 0);
   if (matrixReads > 0) reads = matrixReads;
@@ -188,8 +210,6 @@ async function parseFastqStreaming(file, onProgress) {
     if (phase === 0 && lineNo < 8 && !line.startsWith('@')) throw new Error(`Invalid FASTQ header near line ${lineNo + 1}: expected '@'.`);
     if (phase === 2 && lineNo < 8 && !line.startsWith('+')) throw new Error(`Invalid FASTQ separator near line ${lineNo + 1}: expected '+'.`);
     if (phase === 3) {
-      // Count reads and bases from the quality line, not the sequence line.
-      // This keeps the plotted quality data, read count, and base count in lockstep.
       reads++;
       totalBases += line.length;
       for (let i = 0; i < line.length; i++) {
@@ -206,25 +226,13 @@ async function parseFastqStreaming(file, onProgress) {
 }
 
 function drawQualityPlot(canvasId, title, stats) {
-  const canvas = $(canvasId);
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.max(600, Math.floor(rect.width * dpr));
-  canvas.height = Math.floor(460 * dpr);
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  const w = canvas.width / dpr, h = canvas.height / dpr;
-  const pad = { l: 62, r: 52, t: 54, b: 58 };
+  const canvas = setupCanvas(canvasId, 460);
+  const ctx = canvas.ctx, w = canvas.w, h = canvas.h;
+  const pad = { l: 62, r: 56, t: 54, b: 58 };
   const plotW = w - pad.l - pad.r;
   const plotH = h - pad.t - pad.b;
 
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#ddd'; ctx.fillRect(0, 0, w, 32);
-  ctx.strokeStyle = '#222'; ctx.strokeRect(0.5, 0.5, w - 1, 31);
-  ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.font = '16px system-ui';
-  ctx.fillText(title, w / 2, 22);
+  drawPanelTitle(ctx, w, title, `Reads: ${stats.reads.toLocaleString()}`);
 
   const rowsRaw = stats.perCycle.map((slot, i) => {
     const q = quantilesFromCounts(slot.qCounts, slot.n);
@@ -236,76 +244,164 @@ function drawQualityPlot(canvasId, title, stats) {
   const qToPx = q => pad.t + (45 - q) / 45 * plotH;
   const pctToPx = p => pad.t + (100 - p) / 100 * plotH;
 
-  // Grid and axes
-  ctx.strokeStyle = '#e6e6e6'; ctx.lineWidth = 1;
-  ctx.fillStyle = '#333'; ctx.font = '12px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-  for (let q = 0; q <= 40; q += 10) {
-    const y = qToPx(q);
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
-    ctx.fillText(q, pad.l - 8, y);
-  }
-  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  const xStep = niceStep(maxX);
-  for (let x = 0; x <= maxX; x += xStep) {
-    const xp = xToPx(Math.max(1, x));
-    ctx.fillText(x, xp, h - pad.b + 10);
-  }
-  ctx.strokeStyle = '#333'; ctx.strokeRect(pad.l, pad.t, plotW, plotH);
+  drawAxes(ctx, w, h, pad, plotW, plotH, maxX, 45, 'Quality score');
+  drawBand(ctx, rows, 'p10', 'p90', xToPx, qToPx, 'rgba(9,126,116,0.10)');
+  drawBand(ctx, rows, 'q1', 'q3', xToPx, qToPx, 'rgba(9,126,116,0.20)');
+  drawLine(ctx, rows, 'median', xToPx, qToPx, THEME.charcoal, 2.2, []);
+  drawLine(ctx, rows, 'mean', xToPx, qToPx, THEME.green, 1.8, [6, 4]);
+  drawLine(ctx, rows, 'represented', xToPx, pctToPx, THEME.acid, 1.4, []);
 
-  // Quality percentile bands, grayscale like FastQC-style plots
-  drawBand(rows, 'p10', 'p90', 'rgba(0,0,0,0.08)');
-  drawBand(rows, 'q1', 'q3', 'rgba(0,0,0,0.16)');
-  drawLine(rows, 'median', '#111', 2, []);
-  drawLine(rows, 'mean', '#e76f51', 1.7, [6, 4]);
-  drawLine(rows, 'represented', '#e00', 1.4, [], pctToPx);
-
-  // Labels
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#111'; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillStyle = THEME.charcoal; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
   ctx.fillText('Cycle', pad.l + plotW / 2, h - 8);
-  ctx.save(); ctx.translate(18, pad.t + plotH / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('Quality Score', 0, 0); ctx.restore();
-  ctx.fillStyle = '#e00'; ctx.font = '16px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = THEME.acid; ctx.font = '16px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
   ctx.fillText('100%', w - 6, pctToPx(100)); ctx.fillText('0%', w - 6, pctToPx(0));
-  ctx.textAlign = 'left'; ctx.font = '18px system-ui'; ctx.textBaseline = 'bottom';
-  ctx.fillText(`Reads: ${stats.reads.toLocaleString()}`, pad.l, h - 8);
 
-  // Legend
-  ctx.font = '12px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  const legendY = 42;
-  legendItem(70, legendY, '#111', [], 'median');
-  legendItem(145, legendY, '#e76f51', [6,4], 'mean');
-  legendItem(215, legendY, '#e00', [], '% reads present');
-
-  function drawBand(rows, lo, hi, color) {
-    if (!rows.length) return;
-    ctx.beginPath();
-    rows.forEach((r, i) => { const x = xToPx(r.x), y = qToPx(r[hi]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-    for (let i = rows.length - 1; i >= 0; i--) { const r = rows[i]; ctx.lineTo(xToPx(r.x), qToPx(r[lo])); }
-    ctx.closePath(); ctx.fillStyle = color; ctx.fill();
-  }
-  function drawLine(rows, key, color, width, dash, yFunc = qToPx) {
-    if (!rows.length) return;
-    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash);
-    rows.forEach((r, i) => { const x = xToPx(r.x), y = yFunc(r[key]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-    ctx.stroke(); ctx.setLineDash([]);
-  }
-  function legendItem(x, y, color, dash, text) {
-    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 26, y); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = '#333'; ctx.fillText(text, x + 32, y);
-  }
+  const ly = h - 26;
+  legendLine(ctx, pad.l, ly, THEME.charcoal, [], 'median');
+  legendLine(ctx, pad.l + 100, ly, THEME.green, [6,4], 'mean');
+  legendLine(ctx, pad.l + 180, ly, THEME.acid, [], '% reads represented');
 }
 
-function clearCanvas(id) {
+function drawQualityHeatmap(canvasId, title, stats) {
+  const canvas = setupCanvas(canvasId, 330);
+  const ctx = canvas.ctx, w = canvas.w, h = canvas.h;
+  const pad = { l: 62, r: 56, t: 46, b: 56 };
+  const plotW = w - pad.l - pad.r;
+  const plotH = h - pad.t - pad.b;
+  const maxX = Math.max(1, stats.perCycle.length);
+  const maxQ = 45;
+  const minQ = 0;
+
+  drawPanelTitle(ctx, w, 'Quality-count heatmap', title);
+  drawAxes(ctx, w, h, pad, plotW, plotH, maxX, maxQ, 'Q score');
+
+  const binsX = Math.min(maxX, Math.max(1, Math.floor(plotW)));
+  const binsQ = maxQ - minQ + 1;
+  const matrix = Array.from({ length: binsX }, () => new Float64Array(binsQ));
+  let maxCount = 0;
+
+  for (let pos = 0; pos < stats.perCycle.length; pos++) {
+    const slot = stats.perCycle[pos];
+    if (!slot) continue;
+    const bx = Math.min(binsX - 1, Math.floor(pos * binsX / maxX));
+    for (let q = minQ; q <= maxQ; q++) {
+      const c = slot.qCounts[q] || 0;
+      if (!c) continue;
+      matrix[bx][q - minQ] += c;
+      if (matrix[bx][q - minQ] > maxCount) maxCount = matrix[bx][q - minQ];
+    }
+  }
+
+  const cellW = plotW / binsX;
+  const cellH = plotH / binsQ;
+  for (let bx = 0; bx < binsX; bx++) {
+    const x = pad.l + bx * cellW;
+    for (let q = minQ; q <= maxQ; q++) {
+      const count = matrix[bx][q - minQ];
+      if (!count) continue;
+      const y = pad.t + (maxQ - q) * cellH;
+      ctx.fillStyle = heatColor(count, maxCount);
+      ctx.fillRect(x, y, Math.ceil(cellW) + 0.5, Math.ceil(cellH) + 0.5);
+    }
+  }
+
+  ctx.strokeStyle = 'rgba(47,61,70,.70)'; ctx.lineWidth = 1; ctx.strokeRect(pad.l, pad.t, plotW, plotH);
+  ctx.fillStyle = THEME.charcoal; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText('Cycle', pad.l + plotW / 2, h - 8);
+
+  // Compact legend for count intensity, using sqrt scaling to keep low-frequency tails visible.
+  const lx = w - pad.r - 155, ly = h - 32, lw = 120, lh = 10;
+  for (let i = 0; i < lw; i++) {
+    const value = Math.pow(i / (lw - 1), 2) * maxCount;
+    ctx.fillStyle = heatColor(value, maxCount);
+    ctx.fillRect(lx + i, ly, 1, lh);
+  }
+  ctx.strokeStyle = 'rgba(47,61,70,.35)'; ctx.strokeRect(lx, ly, lw, lh);
+  ctx.fillStyle = THEME.charcoal; ctx.font = '11px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText('0', lx, ly + 13);
+  ctx.textAlign = 'right'; ctx.fillText(compact(maxCount), lx + lw, ly + 13);
+  ctx.textAlign = 'center'; ctx.fillText('bases per Q/cycle bin', lx + lw / 2, ly - 14);
+}
+
+function setupCanvas(id, cssHeight) {
   const canvas = $(id);
-  // Resetting width/height is the most reliable way to clear stale pixels,
-  // especially after switching between Chart.js/canvas versions in the same page.
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.max(600, Math.floor(rect.width * dpr));
-  canvas.height = Math.floor(460 * dpr);
+  canvas.height = Math.floor(cssHeight * dpr);
   const ctx = canvas.getContext('2d');
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(dpr, dpr);
+  const w = canvas.width / dpr, h = canvas.height / dpr;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, w, h);
+  return { canvas, ctx, w, h };
+}
+
+function clearCanvas(id, cssHeight = 460) { setupCanvas(id, cssHeight); }
+
+function drawPanelTitle(ctx, w, title, subtitle) {
+  ctx.fillStyle = 'rgba(9,126,116,.12)'; ctx.fillRect(0, 0, w, 34);
+  ctx.strokeStyle = 'rgba(47,61,70,.35)'; ctx.strokeRect(0.5, 0.5, w - 1, 33);
+  ctx.fillStyle = THEME.charcoal; ctx.textAlign = 'center'; ctx.font = '700 15px system-ui'; ctx.textBaseline = 'middle';
+  ctx.fillText(`${title} — ${subtitle}`, w / 2, 18);
+}
+
+function drawAxes(ctx, w, h, pad, plotW, plotH, maxX, maxY, yLabel) {
+  const xToPx = x => pad.l + (x - 1) / Math.max(1, maxX - 1) * plotW;
+  const yToPx = y => pad.t + (maxY - y) / maxY * plotH;
+  ctx.strokeStyle = 'rgba(47,61,70,.14)'; ctx.lineWidth = 1;
+  ctx.fillStyle = 'rgba(47,61,70,.85)'; ctx.font = '12px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let y = 0; y <= maxY; y += 5) {
+    if (y % 10 !== 0 && maxY > 30) continue;
+    const yp = yToPx(y);
+    ctx.beginPath(); ctx.moveTo(pad.l, yp); ctx.lineTo(w - pad.r, yp); ctx.stroke();
+    ctx.fillText(y, pad.l - 8, yp);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const xStep = niceStep(maxX);
+  for (let x = 0; x <= maxX; x += xStep) ctx.fillText(x, xToPx(Math.max(1, x)), h - pad.b + 10);
+  ctx.strokeStyle = 'rgba(47,61,70,.70)'; ctx.strokeRect(pad.l, pad.t, plotW, plotH);
+  ctx.save(); ctx.translate(18, pad.t + plotH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = THEME.charcoal; ctx.font = '16px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+}
+
+function drawBand(ctx, rows, lo, hi, xToPx, yToPx, color) {
+  if (!rows.length) return;
+  ctx.beginPath();
+  rows.forEach((r, i) => { const x = xToPx(r.x), y = yToPx(r[hi]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  for (let i = rows.length - 1; i >= 0; i--) { const r = rows[i]; ctx.lineTo(xToPx(r.x), yToPx(r[lo])); }
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+}
+
+function drawLine(ctx, rows, key, xToPx, yToPx, color, width, dash) {
+  if (!rows.length) return;
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash);
+  rows.forEach((r, i) => { const x = xToPx(r.x), y = yToPx(r[key]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function legendLine(ctx, x, y, color, dash, text) {
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 26, y); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = THEME.charcoal; ctx.font = '12px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + 32, y);
+}
+
+function heatColor(count, maxCount) {
+  if (!maxCount || count <= 0) return 'rgba(255,255,255,0)';
+  const t = Math.sqrt(count / maxCount);
+  const low = hexToRgb(THEME.acid);
+  const high = hexToRgb(THEME.green);
+  const r = Math.round(low.r + (high.r - low.r) * t);
+  const g = Math.round(low.g + (high.g - low.g) * t);
+  const b = Math.round(low.b + (high.b - low.b) * t);
+  const a = 0.18 + 0.82 * t;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function hexToRgb(hex) {
+  const v = hex.replace('#','');
+  return { r: parseInt(v.slice(0,2),16), g: parseInt(v.slice(2,4),16), b: parseInt(v.slice(4,6),16) };
 }
 
 function quantilesFromCounts(counts, n) {
@@ -338,6 +434,13 @@ function niceStep(maxX) {
   const pow = Math.pow(10, Math.floor(Math.log10(raw)));
   const n = raw / pow;
   return (n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
+}
+
+function compact(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return Math.round(n).toLocaleString();
 }
 
 function formatBytes(n) {
